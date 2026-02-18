@@ -1,0 +1,115 @@
+/* RESET */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #0b0b0e;
+    color: #e6e6eb;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    text-align: center;
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* NOISE OVERLAY */
+.noise {
+    position: fixed;
+    inset: 0;
+    background: url("https://grainy-gradients.vercel.app/noise.svg");
+    opacity: 0.04;
+    pointer-events: none;
+    z-index: 1;
+}
+
+header {
+    margin: 60px 0 40px;
+    position: relative;
+    z-index: 2;
+}
+
+h1 {
+    font-size: 3rem;
+    letter-spacing: 2px;
+    color: #f4b6d7;
+    text-shadow: 0 0 10px rgba(244,182,215,0.2);
+}
+
+.subtitle {
+    margin-top: 10px;
+    opacity: 0.7;
+    font-size: 1rem;
+}
+
+main {
+    position: relative;
+    z-index: 2;
+}
+
+/* GAME */
+.game-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+iframe {
+    border: 2px solid #2a2a33;
+    border-radius: 12px;
+    background: black;
+    box-shadow:
+        0 0 40px rgba(0,0,0,0.8),
+        0 0 60px rgba(244,182,215,0.05);
+}
+
+.fullscreen-btn {
+    color: #f4b6d7;
+    text-decoration: none;
+    border: 1px solid #f4b6d7;
+    padding: 10px 24px;
+    border-radius: 999px;
+    transition: all 0.25s ease;
+}
+
+.fullscreen-btn:hover {
+    background: #f4b6d7;
+    color: #0b0b0e;
+}
+
+/* DESCRIPTION */
+.description {
+    max-width: 720px;
+    margin: 60px auto;
+    opacity: 0.9;
+}
+
+.description h2 {
+    color: #ff88bb;
+    margin-bottom: 20px;
+}
+
+.warning {
+    margin-top: 20px;
+    font-size: 0.9rem;
+    opacity: 0.6;
+}
+
+/* FEEDBACK */
+.feedback {
+    margin: 80px auto;
+}
+
+.feedback h2 {
+    color: #ff88bb;
+    margin-bottom: 10px;
+}
+
+/* FOOTER */
+footer {
+    margin: 60px 0 30px;
+    opacity: 0.4;
+    font-size: 0.8rem;
+}
