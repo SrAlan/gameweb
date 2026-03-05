@@ -321,6 +321,27 @@ function bindControls() {
   document.getElementById('mbtn-fit').addEventListener('click',  () => { if (mapData) fitAll(mapData.nodes); });
   document.getElementById('mbtn-zin').addEventListener('click',  () => { transform.scale = Math.min(4, transform.scale * 1.2); applyTransform(); });
   document.getElementById('mbtn-zout').addEventListener('click', () => { transform.scale = Math.max(0.05, transform.scale * 0.8); applyTransform(); });
+
+  // Pantalla completa
+  const fsBtn = document.getElementById('mbtn-fullscreen');
+  const mapSection = document.querySelector('.story-map-section');
+  fsBtn.addEventListener('click', () => {
+    const isFs = mapSection.classList.toggle('fullscreen');
+    fsBtn.textContent = isFs ? '✕' : '⛶';
+    fsBtn.title = isFs ? 'Salir de pantalla completa' : 'Pantalla completa';
+    // Prevenir scroll del body en fullscreen
+    document.body.style.overflow = isFs ? 'hidden' : '';
+    setTimeout(() => { if (mapData) fitAll(mapData.nodes); }, 50);
+  });
+  // Salir con Escape
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && mapSection.classList.contains('fullscreen')) {
+      mapSection.classList.remove('fullscreen');
+      fsBtn.textContent = '⛶';
+      fsBtn.title = 'Pantalla completa';
+      document.body.style.overflow = '';
+    }
+  });
 }
 
 // ─── TRANSFORM / FIT ─────────────────────────────────────────

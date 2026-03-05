@@ -131,7 +131,7 @@
             letter-spacing: 0.1em; text-transform: uppercase; color: #7c6af7;
             border-bottom: 1px solid rgba(124,106,247,0.15);
         }
-        .map-node-content { padding: 10px 12px; font-size: 11px; line-height: 1.6; color: #e0dff5; overflow: hidden; max-height: 200px; }
+        .map-node-content { padding: 10px 12px; font-size: 11px; line-height: 1.6; color: #e0dff5; overflow: auto; max-height: none; }
         .map-node-content h1, .map-node-content h2, .map-node-content h3 { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; color: #7c6af7; margin-bottom: 6px; }
         .map-node-content strong { color: #f76ac8; }
         .map-node-content em { color: #6b6a88; font-style: italic; }
@@ -140,6 +140,21 @@
         .map-node-content td, .map-node-content th { border: 1px solid #1e1e2e; padding: 2px 6px; }
         .map-node-content td:first-child { color: #6b6a88; }
         .map-node-content hr { border: none; border-top: 1px solid #1e1e2e; margin: 6px 0; }
+
+        /* ── Pantalla completa ── */
+        .story-map-section.fullscreen {
+            position: fixed;
+            inset: 0;
+            z-index: 999;
+            border: none;
+        }
+        .story-map-section.fullscreen #map-canvas-wrap {
+            height: calc(100vh - 53px);
+        }
+        .story-map-section.fullscreen #map-detail {
+            max-height: calc(100vh - 53px - 24px);
+        }
+        #mbtn-fullscreen { font-size: 15px; }
 
         .mc-1 { border-color: rgba(255,80,80,0.5)   !important; background: rgba(255,80,80,0.05)   !important; } .mc-1 .map-node-content { color: #ff9090; }
         .mc-2 { border-color: rgba(255,180,60,0.5)  !important; background: rgba(255,180,60,0.05)  !important; } .mc-2 .map-node-content { color: #ffd080; }
@@ -227,6 +242,7 @@
                     <button class="mzbtn" id="mbtn-fit" title="Ajustar todo">⊡</button>
                     <button class="mzbtn" id="mbtn-zin">+</button>
                     <button class="mzbtn" id="mbtn-zout">−</button>
+                    <button class="mzbtn" id="mbtn-fullscreen" title="Pantalla completa">⛶</button>
                 </div>
             </div>
 
