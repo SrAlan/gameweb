@@ -5,19 +5,186 @@
     <title>Between Floors</title>
     <meta name="description" content="Juego de supervivencia psicológica en un ascensor.">
     <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
 
-    <!-- Ajustes de color solo para el título -->
     <style>
+        /* ── Título ── */
         header h1 {
-            color: #6bbcff; /* azul frío principal */
-            text-shadow: 
+            color: #6bbcff;
+            text-shadow:
                 0 0 6px rgba(107, 188, 255, 0.4),
                 0 0 14px rgba(40, 120, 200, 0.2);
         }
-
         header .subtitle {
-            color: #9acbff; /* azul más suave */
+            color: #9acbff;
         }
+
+        /* ════════════════════════════════════════
+           MAPA DE HISTORIA
+        ════════════════════════════════════════ */
+        .story-map-section {
+            width: 100%;
+            background: #0a0a0f;
+            border-top: 1px solid #1e1e2e;
+            border-bottom: 1px solid #1e1e2e;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        #map-header {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 20px;
+            background: rgba(10,10,15,0.98);
+            border-bottom: 1px solid #1e1e2e;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+        #map-header h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 13px;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, #7c6af7, #f76ac8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+        .map-tag {
+            font-size: 10px;
+            color: #6b6a88;
+            border: 1px solid #1e1e2e;
+            border-radius: 4px;
+            padding: 3px 8px;
+            letter-spacing: 0.05em;
+        }
+        #map-stats {
+            margin-left: auto;
+            display: flex;
+            gap: 16px;
+            font-size: 10px;
+            color: #6b6a88;
+        }
+        #map-stats span { display: flex; align-items: center; gap: 5px; }
+        #map-stats b { color: #e0dff5; }
+
+        #map-zoom-controls { display: flex; gap: 4px; }
+        .mzbtn {
+            width: 28px; height: 28px;
+            background: #12121a;
+            border: 1px solid #1e1e2e;
+            border-radius: 4px;
+            color: #e0dff5;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex; align-items: center; justify-content: center;
+            transition: background .15s;
+        }
+        .mzbtn:hover { background: #1e1e2e; }
+
+        #map-canvas-wrap {
+            width: 100%;
+            height: 600px;
+            overflow: hidden;
+            cursor: grab;
+            position: relative;
+            background:
+                radial-gradient(ellipse 80% 60% at 50% 0%, rgba(124,106,247,0.05) 0%, transparent 70%),
+                #0a0a0f;
+        }
+        #map-canvas-wrap:active,
+        #map-canvas-wrap.panning { cursor: grabbing; }
+
+        #map-grid-bg {
+            position: absolute; inset: -2000px;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            pointer-events: none;
+        }
+        #map-scene { position: absolute; transform-origin: 0 0; }
+
+        #map-edges-svg {
+            position: absolute; top: 0; left: 0;
+            width: 1px; height: 1px; overflow: visible;
+            pointer-events: none;
+        }
+        .map-edge-path { fill: none; stroke: #6b6a88; stroke-width: 1.5; opacity: 0.45; transition: opacity .2s, stroke .2s; }
+        .map-edge-path.highlighted { stroke: #7c6af7; opacity: 1; stroke-width: 2; }
+
+        .map-node {
+            position: absolute; border-radius: 8px;
+            border: 1px solid #1e1e2e; background: #12121a;
+            overflow: hidden; transition: box-shadow .2s, border-color .2s; cursor: pointer;
+        }
+        .map-node:hover { border-color: #7c6af7; box-shadow: 0 0 0 1px #7c6af7, 0 8px 32px rgba(124,106,247,0.2); z-index: 10 !important; }
+        .map-node.selected { border-color: #f76ac8; box-shadow: 0 0 0 2px #f76ac8, 0 12px 40px rgba(247,106,200,0.25); z-index: 20 !important; }
+        .map-node.group-node { background: rgba(124,106,247,0.04); border: 1px solid rgba(124,106,247,0.15); border-radius: 12px; }
+        .map-node.group-node .map-node-label {
+            background: rgba(124,106,247,0.1); padding: 6px 12px;
+            font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase; color: #7c6af7;
+            border-bottom: 1px solid rgba(124,106,247,0.15);
+        }
+        .map-node-content { padding: 10px 12px; font-size: 11px; line-height: 1.6; color: #e0dff5; overflow: hidden; max-height: 200px; }
+        .map-node-content h1, .map-node-content h2, .map-node-content h3 { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 700; color: #7c6af7; margin-bottom: 6px; }
+        .map-node-content strong { color: #f76ac8; }
+        .map-node-content em { color: #6b6a88; font-style: italic; }
+        .map-node-content p { margin-bottom: 4px; }
+        .map-node-content table { width: 100%; border-collapse: collapse; font-size: 10px; margin-top: 4px; }
+        .map-node-content td, .map-node-content th { border: 1px solid #1e1e2e; padding: 2px 6px; }
+        .map-node-content td:first-child { color: #6b6a88; }
+        .map-node-content hr { border: none; border-top: 1px solid #1e1e2e; margin: 6px 0; }
+
+        .mc-1 { border-color: rgba(255,80,80,0.5)   !important; background: rgba(255,80,80,0.05)   !important; } .mc-1 .map-node-content { color: #ff9090; }
+        .mc-2 { border-color: rgba(255,180,60,0.5)  !important; background: rgba(255,180,60,0.05)  !important; } .mc-2 .map-node-content { color: #ffd080; }
+        .mc-3 { border-color: rgba(60,200,120,0.5)  !important; background: rgba(60,200,120,0.05)  !important; } .mc-3 .map-node-content { color: #80e0a0; }
+        .mc-4 { border-color: rgba(80,160,255,0.5)  !important; background: rgba(80,160,255,0.05)  !important; } .mc-4 .map-node-content { color: #90c8ff; }
+        .mc-5 { border-color: rgba(200,100,255,0.5) !important; background: rgba(200,100,255,0.05) !important; } .mc-5 .map-node-content { color: #d090ff; }
+        .mc-6 { border-color: rgba(80,220,220,0.5)  !important; background: rgba(80,220,220,0.05)  !important; } .mc-6 .map-node-content { color: #80e8e8; }
+
+        #map-detail {
+            position: absolute; right: 12px; top: 12px;
+            width: 290px; max-height: calc(600px - 24px);
+            background: #12121a; border: 1px solid #1e1e2e; border-radius: 10px;
+            display: none; flex-direction: column; overflow: hidden;
+            z-index: 100; box-shadow: 0 24px 60px rgba(0,0,0,0.7);
+        }
+        #map-detail.visible { display: flex; }
+        #map-detail-header {
+            padding: 12px 16px; border-bottom: 1px solid #1e1e2e;
+            font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 700;
+            letter-spacing: 0.1em; text-transform: uppercase; color: #7c6af7;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        #map-detail-close { cursor: pointer; color: #6b6a88; font-size: 16px; line-height: 1; transition: color .15s; }
+        #map-detail-close:hover { color: #e0dff5; }
+        #map-detail-body { padding: 14px 16px; overflow-y: auto; font-size: 11.5px; line-height: 1.7; color: #e0dff5; flex: 1; }
+        #map-detail-body h1, #map-detail-body h2, #map-detail-body h3 { font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; color: #7c6af7; margin: 10px 0 6px; }
+        #map-detail-body strong { color: #f76ac8; }
+        #map-detail-body em { color: #6b6a88; }
+        #map-detail-body p { margin-bottom: 6px; }
+        #map-detail-body table { width:100%; border-collapse:collapse; margin-top:6px; }
+        #map-detail-body td, #map-detail-body th { border:1px solid #1e1e2e; padding:3px 8px; font-size:11px; }
+        #map-detail-body td:first-child { color: #6b6a88; }
+        #map-detail-body hr { border:none; border-top:1px solid #1e1e2e; margin:8px 0; }
+
+        #map-minimap {
+            position: absolute; bottom: 12px; left: 12px;
+            width: 150px; height: 90px;
+            background: rgba(12,12,20,0.92); border: 1px solid #1e1e2e;
+            border-radius: 6px; overflow: hidden;
+        }
+        #map-minimap canvas { width: 100%; height: 100%; }
+
+        #map-detail-body::-webkit-scrollbar { width: 4px; }
+        #map-detail-body::-webkit-scrollbar-track { background: transparent; }
+        #map-detail-body::-webkit-scrollbar-thumb { background: #1e1e2e; border-radius: 2px; }
     </style>
 </head>
 <body>
@@ -31,6 +198,7 @@
 
     <main>
 
+        <!-- ── JUEGO ── -->
         <section class="game-wrapper">
             <iframe
                 src="game/index.html"
@@ -44,6 +212,53 @@
             </a>
         </section>
 
+        <!-- ── MAPA DE HISTORIA ── -->
+        <section class="story-map-section">
+
+            <div id="map-header">
+                <h2>Mapa de Historia</h2>
+                <span class="map-tag">ASCENSOR</span>
+                <div id="map-stats">
+                    <span>Nodos: <b id="mstat-nodes">0</b></span>
+                    <span>Conexiones: <b id="mstat-edges">0</b></span>
+                    <span>Grupos: <b id="mstat-groups">0</b></span>
+                </div>
+                <div id="map-zoom-controls">
+                    <button class="mzbtn" id="mbtn-fit" title="Ajustar todo">⊡</button>
+                    <button class="mzbtn" id="mbtn-zin">+</button>
+                    <button class="mzbtn" id="mbtn-zout">−</button>
+                </div>
+            </div>
+
+            <div id="map-canvas-wrap">
+                <div id="map-grid-bg"></div>
+                <div id="map-scene">
+                    <svg id="map-edges-svg">
+                        <defs>
+                            <marker id="marr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                                <path d="M0,0 L6,3 L0,6 Z" fill="rgba(107,106,136,0.8)"/>
+                            </marker>
+                            <marker id="marr-hi" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                                <path d="M0,0 L6,3 L0,6 Z" fill="#7c6af7"/>
+                            </marker>
+                        </defs>
+                    </svg>
+                </div>
+
+                <div id="map-detail">
+                    <div id="map-detail-header">
+                        <span id="map-detail-title">Nodo</span>
+                        <span id="map-detail-close">✕</span>
+                    </div>
+                    <div id="map-detail-body"></div>
+                </div>
+
+                <div id="map-minimap"><canvas id="map-minimap-canvas"></canvas></div>
+            </div>
+
+        </section>
+
+        <!-- ── DESCRIPCIÓN ── -->
         <section class="description">
             <h2>Sobre el juego</h2>
 
@@ -62,6 +277,7 @@
             </p>
         </section>
 
+        <!-- ── FEEDBACK ── -->
         <section class="feedback">
             <h2>Feedback</h2>
             <p>
@@ -81,6 +297,9 @@
     <footer>
         <p>© 2026 – Juego indie</p>
     </footer>
+
+    <!-- Visor del mapa: datos + lógica en archivo separado -->
+    <script src="story-map.js"></script>
 
 </body>
 </html>
