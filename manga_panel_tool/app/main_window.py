@@ -46,6 +46,8 @@ from .canvas import PageScene, PageGraphicsView, PanelItem, ArrowItem
 from .ai_analysis import get_provider, empty_analysis
 from .panel_crops import ensure_crops
 from .analysis_review import AnalysisReviewWindow
+from .video_script import collect_slides, parse_ai_summary, panels_text_for_ai, compute_duration
+from .video_script_window import VideoScriptWindow
 
 THUMB_SIZE = 120
 
@@ -104,6 +106,8 @@ class MainWindow(QMainWindow):
         # --- Etapa 2: análisis con IA ---
         self.analysis_review_window: Optional[AnalysisReviewWindow] = None
         self.analysis_worker: Optional[AnalysisWorker] = None
+        self.video_script_window: Optional[VideoScriptWindow] = None
+        self._synopsis_worker = None
         self.crops_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "panel_crops")
         self.crops_cache: dict = {}   # page_id -> {panel_id: crop_path}
 
@@ -219,6 +223,10 @@ class MainWindow(QMainWindow):
         act_analyze = QAction("🧠 Analizar paneles", self)
         act_analyze.triggered.connect(self.start_panel_analysis)
         tb.addAction(act_analyze)
+
+        act_video = QAction("🎬 Guion y diapositivas", self)
+        act_video.triggered.connect(self.open_video_export)
+        tb.addAction(act_video)
 
     # ------------------------------------------------------------------
     # Etapa 2: análisis de paneles con IA
@@ -368,6 +376,133 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Reanalizar", f"Error del proveedor de IA:\n{exc}")
             return
         review_window.on_reanalysis_done(page, panel, result)
+
+    # ------------------------------------------------------------------
+    # Etapa 3: guion de video resumen y diapositivas
+    # ------------------------------------------------------------------
+    def _ensure_all_crops(self) -> bool:
+        """Garantiza que existen los recortes de todos los paneles.
+        Devuelve False si hubo error (ya mostrado al usuario)."""
+        self.crops_cache = {}
+        for page in self.project.pages:
+            try:
+                self.crops_cache[page.id] = ensure_crops(page, self.crops_dir)
+            except Exception as exc:  # noqa: BLE001
+                QMessageBox.critical(self, "Guion", f"Error al recortar paneles:\n{exc}")
+                return False
+        return True
+
+    @staticmethod
+    def _local_synopsis(slides) -> str:
+        """Sinopsis de respaldo sin IA: encadena los primeros resúmenes."""
+        texts = [s["text"] for s in slides if s.get("text")]
+        if not texts:
+            return ""
+        joined = " ".join(texts[:4])
+        if len(texts) > 4:
+            joined += " … y más escenas hasta el final."
+        return joined
+
+    def open_video_export(self):
+        """Abre la ventana de guion/diapositivas a partir del análisis actual."""
+        if not self.project.pages:
+            QMessageBox.information(self, "Guion", "Primero carga alguna página.")
+            return
+        if not any(p.extra.get("analysis") for pg in self.project.pages for p in pg.panels):
+            QMessageBox.information(
+                self, "Guion",
+                "Aún no hay análisis de IA. Ejecuta primero '🧠 Analizar paneles'."
+            )
+            return
+        if not self._ensure_all_crops():
+            return
+
+        crops_by_page = dict(self.crops_cache)
+        slides = collect_slides(self.project, crops_by_page)
+        if not slides:
+            QMessageBox.information(self, "Guion", "No hay viñetas en el proyecto.")
+            return
+
+        if self.video_script_window is None:
+            self.video_script_window = VideoScriptWindow(self)
+            self.video_script_window.on_regenerate_synopsis = self._regen_synopsis_ai
+        self.video_script_window.set_data(
+            slides, synopsis=self._local_synopsis(slides), synopsis_source="local"
+        )
+        self.video_script_window.show()
+        self.video_script_window.raise_()
+        self.video_script_window.activateWindow()
+        self.statusBar().showMessage(
+            "Guion listo. Generando sinopsis con IA en segundo plano…"
+        )
+        # sinopsis con IA (solo texto) en segundo plano, sin bloquear la UI
+        self._start_synopsis_worker(slides)
+
+    def _start_synopsis_worker(self, slides):
+        try:
+            provider = get_provider()
+        except Exception:  # noqa: BLE001  sin API key: quedarse con la local
+            self.statusBar().showMessage(
+                "Sin API de IA: sinopsis generada localmente."
+            )
+            return
+        if not hasattr(provider, "summarize_story"):
+            self.statusBar().showMessage(
+                "El proveedor activo no soporta resumen de texto."
+            )
+            return
+
+        panels_text = panels_text_for_ai(slides)
+        n = len(slides)
+
+        class SynopsisWorker(QThread):
+            done = Signal(str)
+
+            def run(self):
+                try:
+                    raw = provider.summarize_story(panels_text)
+                    parsed = parse_ai_summary(raw, n)
+                    if parsed and parsed["synopsis"]:
+                        self.done.emit(parsed["synopsis"])
+                except Exception:  # noqa: BLE001
+                    pass  # se mantiene la sinopsis local
+
+        self._synopsis_worker = SynopsisWorker()
+        self._synopsis_worker.done.connect(self._on_synopsis_done)
+        self._synopsis_worker.start()
+
+    def _on_synopsis_done(self, synopsis: str):
+        if self.video_script_window is not None:
+            self.video_script_window.apply_synopsis(synopsis, "ia")
+        self.statusBar().showMessage("Sinopsis generada con IA.")
+
+    def _regen_synopsis_ai(self, window):
+        """Regenera la sinopsis bajo demanda desde la ventana del guion."""
+        if not self.video_script_window:
+            return
+        slides = self.video_script_window.slides
+        try:
+            provider = get_provider()
+        except Exception as exc:  # noqa: BLE001
+            QMessageBox.critical(self, "Proveedor de IA", str(exc))
+            return
+        if not hasattr(provider, "summarize_story"):
+            QMessageBox.information(
+                self, "Sinopsis", "El proveedor activo no soporta resumen de texto."
+            )
+            return
+        try:
+            raw = provider.summarize_story(panels_text_for_ai(slides))
+            parsed = parse_ai_summary(raw, len(slides))
+        except Exception as exc:  # noqa: BLE001
+            QMessageBox.critical(self, "Sinopsis", f"Error del proveedor de IA:\n{exc}")
+            return
+        if parsed and parsed["synopsis"]:
+            window.apply_synopsis(parsed["synopsis"], "ia")
+        else:
+            QMessageBox.warning(
+                self, "Sinopsis", "La IA no devolvió una sinopsis utilizable."
+            )
 
     # ------------------------------------------------------------------
     # Carga de páginas

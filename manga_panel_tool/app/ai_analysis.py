@@ -73,6 +73,12 @@ REGLAS IMPORTANTES:
 """
 
 
+PROMPT_SUMMARY = """A partir de los siguientes análisis ordenados de viñetas de un manga, escribe un guion de video resumen en español. Devuelve EXCLUSIVAMENTE un objeto JSON válido:\n\n{{\n  "synopsis": "sinopsis global de la historia en 3-5 frases, lista para ser narrada en el video",\n  "panels": ["frase corta que resume cada viñeta, EN EL MISMO ORDEN en que se listan, lista para mostrarse como subtítulo de su diapositiva"]\n}}\n\nSi algún dato es incierto, no lo inventes.\n\nANÁLISIS DE LAS VIÑETAS EN ORDEN DE LECTURA:\n{panels_text}\n"""
+
+# Alias con nombre más descriptivo usado por summarize_story()
+SUMMARY_PROMPT = PROMPT_SUMMARY
+
+
 # --------------------------------------------------------------------------
 # Proveedor: OpenAI (GPT-4o / GPT-4o-mini con visión)
 # --------------------------------------------------------------------------
@@ -129,6 +135,20 @@ class OpenAIProvider:
         raw = response.choices[0].message.content or ""
         return _parse_json_loose(raw)
 
+    def summarize_story(self, panels_text: str) -> str:
+        """Resumen narrativo (solo texto) a partir de los análisis de paneles."""
+        from openai import OpenAI
+
+        client = OpenAI(api_key=self.api_key)
+        response = client.chat.completions.create(
+            model=self.model,
+            messages=[
+                {"role": "user", "content": SUMMARY_PROMPT.format(panels_text=panels_text)}
+            ],
+            max_tokens=800,
+        )
+        return (response.choices[0].message.content or "").strip()
+
 
 # --------------------------------------------------------------------------
 # Proveedor: Google Gemini
@@ -168,6 +188,15 @@ class GeminiProvider:
             [prompt, {"mime_type": "image/png", "data": image_data}]
         )
         return _parse_json_loose(result.text or "")
+
+    def summarize_story(self, panels_text: str) -> str:
+        """Resumen narrativo (solo texto) a partir de los análisis de paneles."""
+        import google.generativeai as genai
+
+        genai.configure(api_key=self.api_key)
+        model = genai.GenerativeModel(self.model)
+        result = model.generate_content(SUMMARY_PROMPT.format(panels_text=panels_text))
+        return (result.text or "").strip()
 
 
 # --------------------------------------------------------------------------
