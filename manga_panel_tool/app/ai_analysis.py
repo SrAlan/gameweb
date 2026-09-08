@@ -144,7 +144,7 @@ class GeminiProvider:
     name = "gemini"
 
     def __init__(self, model: Optional[str] = None, api_key: Optional[str] = None):
-        self.model = model or os.environ.get("GEMINI_VISION_MODEL", "gemini-2.0-flash")
+        self.model = model or os.environ.get("GEMINI_VISION_MODEL", "gemini-3.6-flash")
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
         if not self.api_key:
             raise ValueError(

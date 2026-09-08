@@ -2,83 +2,162 @@
   "version": 1,
   "pages": [
     {
-      "id": "46e5bbec",
-      "image_path": "C:/Users/asled/Desktop/images.jpg",
-      "width": 449,
-      "height": 682,
+      "id": "6290ed20",
+      "image_path": "C:/Users/User/Desktop/99755eeadc1073e1a23d4612315c41e9.jpg",
+      "width": 236,
+      "height": 369,
       "panels": [
         {
-          "id": "1c5cc8fb",
-          "x": 32.0,
-          "y": 35.0,
-          "w": 383.0,
-          "h": 197.0,
-          "extra": {}
+          "id": "97d967ab",
+          "x": 0.44612476370510395,
+          "y": 0.32703213610586346,
+          "w": 235.2438563327034,
+          "h": 117.89603024574669,
+          "extra": {
+            "analysis": {
+              "actions": [
+                "Gritar sonoramente",
+                "Llevarse las manos hacia el rostro/cuello"
+              ],
+              "characters": [
+                "joven de pelo claro en puntas (posiblemente Zenitsu Agatsuma)"
+              ],
+              "confidence": {
+                "inferred": [
+                  "characters"
+                ],
+                "seen": [
+                  "description",
+                  "actions",
+                  "emotions",
+                  "important_details"
+                ],
+                "written": [
+                  "dialogue"
+                ]
+              },
+              "description": "Un personaje masculino grita aterrorizado con los ojos desorbitados y la boca completamente abierta.",
+              "dialogue": "GYAAAAAAAH!",
+              "emotions": [
+                "Terror extremo",
+                "Pánico",
+                "Histeria"
+              ],
+              "important_details": "Líneas de acción e impacto en el fondo, gran globo de diálogo con letras temblorosas y gruesas, patrón geométrico de triángulos en los hombros del personaje."
+            }
+          }
         },
         {
-          "id": "e6f32816",
-          "x": 32,
-          "y": 246,
-          "w": 383,
-          "h": 115,
-          "extra": {}
+          "id": "b81ed2aa",
+          "x": 120.0,
+          "y": 121.79206049149337,
+          "w": 110.20037807183365,
+          "h": 125.20793950850661,
+          "extra": {
+            "analysis": {
+              "actions": [
+                "una niña grita fuertemente sujetándose la cabeza/orejas",
+                "otra niña se cubre las orejas con expresión de dolor o irritación",
+                "la joven del fondo observa fijamente con la boca abierta"
+              ],
+              "characters": [
+                "joven de cabello largo oscuro en el fondo",
+                "niña a la izquierda tapándose los oídos",
+                "niña/joven en el centro inclinada gritando"
+              ],
+              "confidence": {
+                "inferred": [],
+                "seen": [
+                  "description",
+                  "characters",
+                  "actions",
+                  "emotions",
+                  "important_details"
+                ],
+                "written": [
+                  "dialogue"
+                ]
+              },
+              "description": "Tres personajes femeninos dentro de una habitación. Una niña se agacha gritando con fuerza mientras se tapa los oídos, otra niña a su lado también se cubre las orejas con molestia, y una joven de cabello largo al fondo observa la situación sorprendida.",
+              "dialogue": "CA-LLA-TE\n¡¡iAA AAA GH!!",
+              "emotions": [
+                "desesperación",
+                "molestia por ruido ensordecedor",
+                "angustia",
+                "sorpresa"
+              ],
+              "important_details": "Globo de diálogo puntiagudo que indica un grito de alto volumen, líneas de acción que marcan tensión e intensidad sonora."
+            }
+          }
         },
         {
-          "id": "e3b53902",
-          "x": 32,
-          "y": 376,
-          "w": 383,
-          "h": 304,
-          "extra": {}
-        }
-      ],
-      "extra": {}
-    },
-    {
-      "id": "65728761",
-      "image_path": "C:/Users/asled/Desktop/pagina_manga_23570.jpg",
-      "width": 705,
-      "height": 1000,
-      "panels": [
-        {
-          "id": "a9eac778",
-          "x": 405.46632124352334,
-          "y": 2.0,
-          "w": 277.61658031088086,
-          "h": 204.3860103626943,
-          "extra": {}
+          "id": "fe520288",
+          "x": 0.6616257088846886,
+          "y": 129.2930056710775,
+          "w": 113.0,
+          "h": 117.0,
+          "extra": {
+            "analysis": {
+              "actions": [
+                "Mirar hacia adelante",
+                "Sonreír",
+                "Hablar"
+              ],
+              "characters": [
+                "chica joven de pelo largo con lazo (Nezuko)"
+              ],
+              "confidence": {
+                "inferred": [
+                  "characters"
+                ],
+                "seen": [
+                  "description",
+                  "actions",
+                  "emotions",
+                  "important_details"
+                ],
+                "written": [
+                  "dialogue"
+                ]
+              },
+              "description": "Plano medio de una chica joven con pelo largo y un lazo, sonriendo alegremente con los ojos muy abiertos y la boca abierta mostrando un pequeño colmillo.",
+              "dialogue": "BIEN-VENIDO.",
+              "emotions": [
+                "Alegría",
+                "Entusiasmo",
+                "Expresión de bienvenida"
+              ],
+              "important_details": "Fondo con líneas de concentración/enfoque radiales que enfatizan la revelación o impacto de la escena. Lleva un kimono con patrón geométrico."
+            }
+          }
         },
         {
-          "id": "e515be5f",
-          "x": 403.63989637305696,
-          "y": 194.7823834196891,
-          "w": 305.0129533678757,
-          "h": 196.07253886010363,
-          "extra": {}
-        },
-        {
-          "id": "bd150317",
-          "x": 14.61139896373057,
-          "y": 12.78497409326425,
-          "w": 398.16062176165804,
-          "h": 378.0699481865285,
-          "extra": {}
-        },
-        {
-          "id": "4f18f54c",
-          "x": 12.784974093264196,
-          "y": 403.639896373057,
-          "w": 681.2564766839378,
-          "h": 268.48445595854923,
-          "extra": {}
-        },
-        {
-          "id": "1df99a06",
-          "x": 10.958549222797927,
-          "y": 677.6036269430052,
-          "w": 690.3886010362694,
-          "h": 315.9715025906736,
-          "extra": {}
+          "id": "c2042460",
+          "x": 1.6030245746691847,
+          "y": 248.86200378071834,
+          "w": 238.41209829867674,
+          "h": 121.42155009451795,
+          "extra": {
+            "analysis": {
+              "description": "Primer plano cómico y exagerado del rostro de un personaje gritando intensamente con la boca abierta, ojos enormemente dilatados con venitas y sudor en la cara, mientras se toca la mejilla.",
+              "characters": [
+                "joven de pelo claro con expresión exagerada",
+                "pequeño personaje de pelo oscuro al fondo (esquina inferior izquierda)"
+              ],
+              "actions": [
+                "El personaje principal se lleva la mano a la cara mientras grita descontroladamente.",
+                "El personaje del fondo le responde en un globo de diálogo secundario."
+              ],
+              "emotions": [
+                "Exaltación extrema",
+                "Emoción desmesurada",
+                "Shock cómico"
+              ],
+              "dialogue": "¡¡ES TAN LINDA QUE ME DARÁ UN PARO CARDIACO!! ¡¡ESPERO QUE TE DE UNO LUEGO!!",
+              "important_details": "Expresión facial altamente caricaturizada típica del manga, ojos gigantes con pupilas diminutas y venas visibles, gotas de sudor y líneas de velocidad en el fondo.",
+              "confidence": {}
+            }
+          }
         }
       ],
       "extra": {}
