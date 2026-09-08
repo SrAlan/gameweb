@@ -37,12 +37,54 @@ from PySide6.QtWidgets import (
     QStatusBar,
 )
 
+from PySide6.QtCore import QThread, Signal
+
 from .models import Project, Page, Panel
 from .detection import detect_panels
 from .ordering import compute_reading_order
 from .canvas import PageScene, PageGraphicsView, PanelItem, ArrowItem
+from .ai_analysis import get_provider, empty_analysis
+from .panel_crops import ensure_crops
+from .analysis_review import AnalysisReviewWindow
 
 THUMB_SIZE = 120
+
+
+class AnalysisWorker(QThread):
+    """Ejecuta el análisis por IA de varios paneles en segundo plano.
+
+    jobs: lista de dicts {"page", "panel", "crop_path", "index", "total"}
+    """
+
+    panel_done = Signal(object, object, dict)   # page, panel, analysis|{"error":...}
+    finished_all = Signal()
+
+    def __init__(self, provider, jobs, parent=None):
+        super().__init__(parent)
+        self.provider = provider
+        self.jobs = jobs
+        self._cancelled = False
+
+    def cancel(self):
+        self._cancelled = True
+
+    def run(self):
+        for job in self.jobs:
+            if self._cancelled:
+                break
+            page = job["page"]
+            panel = job["panel"]
+            try:
+                label = f"página {os.path.basename(page.image_path)}"
+                analysis = self.provider.analyze_panel_image(
+                    job["crop_path"], label, job["index"], job["total"]
+                )
+                if not analysis.get("confidence"):
+                    analysis["confidence"] = {"seen": [], "written": [], "inferred": []}
+            except Exception as exc:  # noqa: BLE001
+                analysis = {"error": str(exc)}
+            self.panel_done.emit(page, panel, analysis)
+        self.finished_all.emit()
 
 
 class MainWindow(QMainWindow):
@@ -58,6 +100,12 @@ class MainWindow(QMainWindow):
         self.arrow_items: List[ArrowItem] = []
         self.show_arrows = True
         self._syncing_order_list = False
+
+        # --- Etapa 2: análisis con IA ---
+        self.analysis_review_window: Optional[AnalysisReviewWindow] = None
+        self.analysis_worker: Optional[AnalysisWorker] = None
+        self.crops_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "panel_crops")
+        self.crops_cache: dict = {}   # page_id -> {panel_id: crop_path}
 
         self._build_ui()
         self._build_toolbar()
@@ -165,6 +213,161 @@ class MainWindow(QMainWindow):
         act_save = QAction("💾 Guardar proyecto", self)
         act_save.triggered.connect(self.save_project)
         tb.addAction(act_save)
+
+        tb.addSeparator()
+
+        act_analyze = QAction("🧠 Analizar paneles", self)
+        act_analyze.triggered.connect(self.start_panel_analysis)
+        tb.addAction(act_analyze)
+
+    # ------------------------------------------------------------------
+    # Etapa 2: análisis de paneles con IA
+    # ------------------------------------------------------------------
+    def start_panel_analysis(self):
+        """Analiza con IA todos los paneles, en el orden de lectura confirmado."""
+        if not self.project.pages:
+            QMessageBox.information(self, "Analizar", "Primero carga alguna página.")
+            return
+        total_panels = sum(len(p.panels) for p in self.project.pages)
+        if total_panels == 0:
+            QMessageBox.information(
+                self, "Analizar", "No hay viñetas. Detecta o dibuja viñetas primero."
+            )
+            return
+        if self.analysis_worker is not None and self.analysis_worker.isRunning():
+            QMessageBox.information(self, "Analizar", "Ya hay un análisis en curso.")
+            return
+
+        try:
+            provider = get_provider()
+        except Exception as exc:  # noqa: BLE001
+            QMessageBox.critical(
+                self, "Proveedor de IA",
+                f"No se pudo configurar el proveedor de IA:\n{exc}\n\n"
+                "Configura OPENAI_API_KEY o GEMINI_API_KEY en el entorno.",
+            )
+            return
+
+        # recortes (solo los recortes se envían a la IA; las imágenes
+        # originales se conservan intactas)
+        self.crops_cache = {}
+        jobs = []
+        running = 0
+        for page in self.project.pages:
+            try:
+                crops = ensure_crops(page, self.crops_dir)
+            except Exception as exc:  # noqa: BLE001
+                QMessageBox.critical(self, "Analizar", f"Error al recortar paneles:\n{exc}")
+                return
+            self.crops_cache[page.id] = crops
+            for panel in page.panels:
+                crop = crops.get(panel.id)
+                if not crop:
+                    continue
+                running += 1
+                jobs.append({
+                    "page": page,
+                    "panel": panel,
+                    "crop_path": crop,
+                    "index": running,
+                    "total": total_panels,
+                })
+
+        reply = QMessageBox.question(
+            self, "Analizar paneles",
+            f"Se enviarán {len(jobs)} paneles al proveedor de IA "
+            f"'{provider.name}'.\n¿Continuar?",
+        )
+        if reply != QMessageBox.Yes:
+            return
+
+        self.statusBar().showMessage(f"Analizando 0/{len(jobs)} paneles…")
+        self.analysis_worker = AnalysisWorker(provider, jobs, self)
+        self.analysis_worker.panel_done.connect(self.on_panel_analyzed)
+        self.analysis_worker.finished_all.connect(self.on_analysis_finished)
+        self.analysis_worker.start()
+
+    def on_panel_analyzed(self, page, panel, result):
+        if "error" in result:
+            self.statusBar().showMessage(
+                f"Error analizando panel {panel.id}: {result['error']}", 8000
+            )
+            return
+        panel.extra["analysis"] = result
+        done = sum(
+            1
+            for p in self.project.pages
+            for pl in p.panels
+            if pl.extra.get("analysis")
+        )
+        self.statusBar().showMessage(
+            f"Analizando paneles… ({done} con análisis)"
+        )
+
+    def on_analysis_finished(self):
+        self.statusBar().showMessage("Análisis completado.")
+        self.open_analysis_review()
+
+    def _flat_panels_in_order(self):
+        """Lista plana de (page, panel) siguiendo el orden de lectura de
+        todas las páginas del proyecto (la confirmada por el usuario)."""
+        flat = []
+        for page in self.project.pages:
+            for panel in page.panels:
+                flat.append((page, panel))
+        return flat
+
+    def open_analysis_review(self):
+        flat = self._flat_panels_in_order()
+        crops = {}
+        for page_id, page_crops in self.crops_cache.items():
+            crops.update(page_crops)
+        if self.analysis_review_window is None:
+            self.analysis_review_window = AnalysisReviewWindow(self)
+            self.analysis_review_window.on_save_analysis = self._store_analysis
+            self.analysis_review_window.on_reanalyze = self._reanalyze_single_panel
+        self.analysis_review_window.set_data(flat, crops)
+        self.analysis_review_window.show()
+        self.analysis_review_window.raise_()
+        self.analysis_review_window.activateWindow()
+
+    def _store_analysis(self, page, panel, analysis):
+        panel.extra["analysis"] = analysis
+
+    def _reanalyze_single_panel(self, page, panel, review_window):
+        """Reenvía SOLO este panel a la IA y actualiza la revisión al acabar."""
+        crops = self.crops_cache.get(page.id)
+        if not crops:
+            try:
+                crops = ensure_crops(page, self.crops_dir)
+                self.crops_cache[page.id] = crops
+            except Exception as exc:  # noqa: BLE001
+                QMessageBox.critical(self, "Reanalizar", f"Error al recortar:\n{exc}")
+                return
+        crop = crops.get(panel.id)
+        if not crop:
+            QMessageBox.warning(self, "Reanalizar", "Recorte del panel no disponible.")
+            return
+
+        try:
+            provider = get_provider()
+        except Exception as exc:  # noqa: BLE001
+            QMessageBox.critical(self, "Proveedor de IA", str(exc))
+            return
+
+        total = sum(len(p.panels) for p in self.project.pages)
+        idx = next(
+            (i for i, (pg, pl) in enumerate(self._flat_panels_in_order()) if pl.id == panel.id),
+            0,
+        ) + 1
+        try:
+            result = provider.analyze_panel_image(crop, os.path.basename(page.image_path), idx, total)
+            if not result.get("confidence"):
+                result["confidence"] = {"seen": [], "written": [], "inferred": []}
+        except Exception as exc:  # noqa: BLE001
+            QMessageBox.critical(self, "Reanalizar", f"Error del proveedor de IA:\n{exc}")
+            return
+        review_window.on_reanalysis_done(page, panel, result)
 
     # ------------------------------------------------------------------
     # Carga de páginas
@@ -300,11 +503,12 @@ class MainWindow(QMainWindow):
             if item:
                 item.set_number(idx)
 
-        # lista de orden (derecha)
+        # lista de orden (derecha) — marca los paneles ya analizados
         self._syncing_order_list = True
         self.order_list.clear()
         for idx, panel in enumerate(page.panels, start=1):
-            text = f"{idx}.  Viñeta {panel.id}   ({int(panel.w)}×{int(panel.h)} px)"
+            mark = " 🧠" if panel.extra.get("analysis") else ""
+            text = f"{idx}.  Viñeta {panel.id}   ({int(panel.w)}×{int(panel.h)} px){mark}"
             list_item = QListWidgetItem(text)
             list_item.setData(Qt.UserRole, panel.id)
             self.order_list.addItem(list_item)
