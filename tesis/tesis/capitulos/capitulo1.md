@@ -54,3 +54,4 @@ La investigación es viable debido a la disponibilidad de fuentes bibliográfica
 Asimismo, se prevé la realización de observaciones directas en el Templo San Buenaventura de Yaguarón, además de encuestas a visitantes y entrevistas a responsables del sitio, lo que permitirá obtener información confiable para el desarrollo del estudio.
 
 Los recursos humanos, materiales y económicos requeridos son accesibles para la ejecución del proyecto, haciendo factible el cumplimiento de los objetivos propuestos.
+(revisar)
