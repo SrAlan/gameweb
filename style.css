@@ -1,3 +1,22 @@
+/* ════════════════════════════════════════
+   21&InLove — estilo visual novel rosa
+════════════════════════════════════════ */
+
+:root {
+    --night:      #170a1b;   /* fondo, igual al menú del juego */
+    --plum:       #2a1230;   /* paneles */
+    --plum-btn:   #5a2350;   /* botones del menú */
+    --plum-btn-hi:#76306a;
+    --pink:       #ff7eb3;
+    --blush:      #ffc6df;
+    --gold:       #ffdcae;
+    --text:       #f7e6ef;
+    --text-soft:  #c9a9bd;
+
+    --font-display: "Chelsea Market", "Comic Sans MS", cursive, sans-serif;
+    --font-body:    "Quicksand", "Segoe UI", system-ui, sans-serif;
+}
+
 /* RESET */
 * {
     margin: 0;
@@ -5,42 +24,65 @@
     box-sizing: border-box;
 }
 
+html {
+    background: var(--night);
+}
+
 body {
-    background: #0b0b0e;
-    color: #e6e6eb;
-    font-family: "Segoe UI", system-ui, sans-serif;
+    min-height: 100vh;
+    background:
+        radial-gradient(ellipse 70% 45% at 50% -5%, rgba(255, 126, 179, 0.22) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 100% 60%, rgba(255, 126, 179, 0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 0% 85%, rgba(255, 220, 174, 0.06) 0%, transparent 70%),
+        var(--night);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 1.05rem;
+    font-weight: 500;
     text-align: center;
-    line-height: 1.6;
+    line-height: 1.65;
     overflow-x: hidden;
 }
 
-/* NOISE OVERLAY */
-.noise {
+/* ── Destellos de fondo ── */
+.sparkles {
     position: fixed;
     inset: 0;
-    background: url("https://grainy-gradients.vercel.app/noise.svg");
-    opacity: 0.04;
     pointer-events: none;
     z-index: 1;
 }
 
+.sparkle {
+    position: absolute;
+    color: var(--blush);
+    opacity: 0.5;
+    animation: twinkle 4.5s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+    0%, 100% { opacity: 0.15; transform: scale(0.8); }
+    50%      { opacity: 0.75; transform: scale(1.15); }
+}
+
+/* ── Cabecera ── */
 header {
-    margin: 60px 0 40px;
+    margin: 48px 20px 36px;
     position: relative;
     z-index: 2;
 }
 
-h1 {
-    font-size: 3rem;
-    letter-spacing: 2px;
-    color: #f4b6d7;
-    text-shadow: 0 0 10px rgba(244,182,215,0.2);
+.logo {
+    display: block;
+    width: min(520px, 88vw);
+    height: auto;
+    margin: 0 auto;
+    filter: drop-shadow(0 6px 24px rgba(255, 126, 179, 0.35));
 }
 
 .subtitle {
-    margin-top: 10px;
-    opacity: 0.7;
-    font-size: 1rem;
+    margin-top: 14px;
+    color: var(--text-soft);
+    font-size: 1.05rem;
 }
 
 main {
@@ -48,68 +90,189 @@ main {
     z-index: 2;
 }
 
-/* GAME */
+/* ── Marco tipo cuadro de diálogo ── */
+.panel {
+    position: relative;
+    width: min(760px, calc(100% - 32px));
+    margin: 0 auto;
+    padding: 44px 32px 32px;
+    background: linear-gradient(180deg, rgba(58, 24, 62, 0.92), rgba(36, 15, 42, 0.95));
+    border: 2px solid rgba(255, 126, 179, 0.55);
+    border-radius: 20px;
+    box-shadow:
+        0 0 0 4px rgba(255, 126, 179, 0.08),
+        0 18px 50px rgba(0, 0, 0, 0.55);
+}
+
+/* Etiqueta de nombre, como en una visual novel */
+.nametag {
+    position: absolute;
+    top: -18px;
+    left: 24px;
+    padding: 5px 20px 6px;
+    background: linear-gradient(180deg, #ff9cc6, var(--pink));
+    color: #3a0f30;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    border-radius: 999px;
+    box-shadow: 0 4px 14px rgba(255, 126, 179, 0.4);
+}
+
+/* ── Juego ── */
 .game-wrapper {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 20px;
+    gap: 22px;
+    margin-bottom: 56px;
 }
 
-iframe {
-    border: 2px solid #2a2a33;
-    border-radius: 12px;
-    background: black;
+.game-frame {
+    width: min(1280px, calc(100% - 32px));
+    aspect-ratio: 16 / 9;
+    border: 3px solid rgba(255, 126, 179, 0.6);
+    border-radius: 18px;
+    background: #000;
+    overflow: hidden;
     box-shadow:
-        0 0 40px rgba(0,0,0,0.8),
-        0 0 60px rgba(244,182,215,0.05);
+        0 0 0 6px rgba(255, 126, 179, 0.08),
+        0 0 60px rgba(255, 126, 179, 0.18),
+        0 20px 60px rgba(0, 0, 0, 0.7);
 }
 
+.game-frame iframe {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+/* Botón con el mismo look que los del menú del juego */
 .fullscreen-btn {
-    color: #f4b6d7;
+    display: inline-block;
+    padding: 12px 32px;
+    color: var(--text);
+    font-family: var(--font-display);
+    font-size: 1.05rem;
     text-decoration: none;
-    border: 1px solid #f4b6d7;
-    padding: 10px 24px;
-    border-radius: 999px;
-    transition: all 0.25s ease;
+    background: linear-gradient(180deg, var(--plum-btn-hi) 0%, var(--plum-btn) 55%, #4a1c42 100%);
+    border: 2px solid rgba(255, 126, 179, 0.5);
+    border-radius: 12px;
+    box-shadow: 0 4px 0 #2e0f29, 0 8px 20px rgba(0, 0, 0, 0.4);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
 .fullscreen-btn:hover {
-    background: #f4b6d7;
-    color: #0b0b0e;
+    border-color: var(--pink);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #2e0f29, 0 12px 26px rgba(255, 126, 179, 0.25);
 }
 
-/* DESCRIPTION */
+.fullscreen-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #2e0f29;
+}
+
+.fullscreen-btn:focus-visible {
+    outline: 3px solid var(--gold);
+    outline-offset: 4px;
+}
+
+/* ── Descripción ── */
 .description {
-    max-width: 720px;
-    margin: 60px auto;
-    opacity: 0.9;
+    margin-bottom: 64px;
 }
 
-.description h2 {
-    color: #ff88bb;
-    margin-bottom: 20px;
+.description h2,
+.feedback h2 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 1.7rem;
+    color: var(--blush);
+    margin-bottom: 18px;
+}
+
+.description p {
+    max-width: 56ch;
+    margin: 0 auto 16px;
+}
+
+/* Lista con aspecto de opciones de diálogo */
+.choices {
+    list-style: none;
+    display: grid;
+    gap: 12px;
+    margin: 26px auto 8px;
+    max-width: 440px;
+}
+
+.choices li {
+    padding: 12px 20px;
+    font-family: var(--font-display);
+    color: var(--text);
+    background: linear-gradient(180deg, var(--plum-btn-hi) 0%, var(--plum-btn) 55%, #4a1c42 100%);
+    border: 2px solid rgba(255, 126, 179, 0.35);
+    border-radius: 12px;
+    box-shadow: 0 3px 0 #2e0f29;
 }
 
 .warning {
-    margin-top: 20px;
+    margin-top: 22px;
     font-size: 0.9rem;
-    opacity: 0.6;
+    color: var(--gold);
+    opacity: 0.85;
 }
 
-/* FEEDBACK */
+/* ── Feedback ── */
 .feedback {
-    margin: 80px auto;
+    margin-bottom: 40px;
 }
 
-.feedback h2 {
-    color: #ff88bb;
-    margin-bottom: 10px;
+.feedback p {
+    max-width: 52ch;
+    margin: 0 auto 24px;
 }
 
-/* FOOTER */
+.feedback iframe {
+    display: block;
+    width: 100%;
+    max-width: 640px;
+    height: 800px;
+    margin: 0 auto;
+    border: 2px solid rgba(255, 126, 179, 0.4);
+    border-radius: 14px;
+    background: #fff;
+}
+
+/* ── Pie ── */
 footer {
-    margin: 60px 0 30px;
-    opacity: 0.4;
-    font-size: 0.8rem;
+    position: relative;
+    z-index: 2;
+    margin: 56px 0 30px;
+    color: var(--text-soft);
+    opacity: 0.7;
+    font-size: 0.85rem;
+}
+
+/* ── Móvil ── */
+@media (max-width: 560px) {
+    .panel {
+        padding: 40px 20px 26px;
+    }
+
+    .feedback iframe {
+        height: 720px;
+    }
+}
+
+/* ── Accesibilidad ── */
+@media (prefers-reduced-motion: reduce) {
+    .sparkle {
+        animation: none;
+        opacity: 0.35;
+    }
+
+    .fullscreen-btn {
+        transition: none;
+    }
 }

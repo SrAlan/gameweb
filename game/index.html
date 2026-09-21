@@ -1,235 +1,220 @@
-<!doctype html>
-<html lang="en-us">
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+		<title>cartas</title>
+		<style>
+html, body, #canvas {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
 
-<head>
-  <meta charset="utf-8">
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <title>ascensor</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="manifest" href="manifest.json" crossorigin="use-credentials" />
-  <link rel="icon" href="icons/icon-72x72.png" sizes="72x72" type="image/png" />
-  <link rel="icon" href="icons/icon-96x96.png" sizes="96x96" type="image/png" />
-  <link rel="icon" href="icons/icon-128x128.png" sizes="128x128" type="image/png" />
-  <link rel="icon" href="icons/icon-144x144.png" sizes="144x144" type="image/png" />
-  <link rel="icon" href="icons/icon-152x152.png" sizes="152x152" type="image/png" />
-  <link rel="icon" href="icons/icon-192x192.png" sizes="192x192" type="image/png" />
-  <link rel="icon" href="icons/icon-384x384.png" sizes="384x384" type="image/png" />
-  <link rel="icon" href="icons/icon-512x512.png" sizes="512x512" type="image/png" />
-  <!-- ios support -->
-  <link rel="apple-touch-icon" href="icons/icon-72x72.png" sizes="72x72" type="image/png" />
-  <link rel="apple-touch-icon" href="icons/icon-96x96.png" sizes="96x96" type="image/png" />
-  <link rel="apple-touch-icon" href="icons/icon-128x128.png" sizes="128x128" type="image/png" />
-  <link rel="apple-touch-icon" href="icons/icon-144x144.png" sizes="144x144" type="image/png" />
-  <link rel="apple-touch-icon" href="icons/icon-152x152.png" sizes="152x152" type="image/png" />
-  <link rel="apple-touch-icon" href="icons/icon-192x192.png" sizes="192x192" type="image/png" />
-  <link rel="apple-touch-icon" href="icons/icon-384x384.png" sizes="384x384" type="image/png" />
-  <link rel="apple-touch-icon" href="icons/icon-512x512.png" sizes="512x512" type="image/png" />
+body {
+	color: white;
+	background-color: black;
+	overflow: hidden;
+	touch-action: none;
+}
 
-  <meta name="theme-color" content="#000" />
+#canvas {
+	display: block;
+}
 
-  <style>
-    html {
-      background: #444;
-      font-family: sans-serif;
-    }
+#canvas:focus {
+	outline: none;
+}
 
-    body, html {
-      overscroll-behavior: none;
-    }
+#status, #status-splash, #status-progress {
+	position: absolute;
+	left: 0;
+	right: 0;
+}
 
-    #canvas, #overlayDiv {
-      position: absolute;
-      top: 0px;
-      left: 0px;
+#status, #status-splash {
+	top: 0;
+	bottom: 0;
+}
 
-      width: 100%;
-      height: 100%;
+#status {
+	background-color: #242424;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	visibility: hidden;
+}
 
-      border: 0 none;
-    }
+#status-splash {
+	max-height: 100%;
+	max-width: 100%;
+	margin: auto;
+}
 
-    #canvas {
-      background: #000;
-    }
+#status-splash.show-image--false {
+	display: none;
+}
 
-    .visible {
-      visibility: visible;
-      opacity: 1.0;
-      transition: opacity .1s linear;
-    }
+#status-splash.fullsize--true {
+	height: 100%;
+	width: 100%;
+	object-fit: contain;
+}
 
-    .hidden {
-      visibility: hidden;
-      opacity: 0;
-      transition: visibility 0s .25s, opacity .25s linear;
-    }
+#status-splash.use-filter--false {
+	image-rendering: pixelated;
+}
 
-    #statusDiv, #inputDiv {
-      background: rgba(0, 0, 0, 0.75);
-      width: 50%;
-      margin: auto;
-      min-width: 340px;
-      padding: 10px;
+#status-progress, #status-notice {
+	display: none;
+}
 
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
+#status-progress {
+	bottom: 10%;
+	width: 50%;
+	margin: 0 auto;
+}
 
-      border-radius: 0 0 5px 5px;
-    }
+#status-notice {
+	background-color: #5b3943;
+	border-radius: 0.5rem;
+	border: 1px solid #9b3943;
+	color: #e0e0e0;
+	font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
+	line-height: 1.3;
+	margin: 0 2rem;
+	overflow: hidden;
+	padding: 1rem;
+	text-align: center;
+	z-index: 1;
+}
+		</style>
+		<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
+<link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
 
-    #statusTextDiv {
-      overflow: auto;
-      max-height: 40vh;
-      color: #ccc;
-      font-size: 14px;
-    }
+	</head>
+	<body>
+		<canvas id="canvas">
+			Your browser does not support the canvas tag.
+		</canvas>
 
-    #statusProgress {
-      display: none;
-      width: 100%;
-    }
+		<noscript>
+			Your browser does not support JavaScript.
+		</noscript>
 
-    #inputDiv {
-      width: 65%;
-      padding-left: 10px;
-      padding-right: 20px;
-    }
+		<div id="status">
+			<img id="status-splash" class="show-image--true fullsize--true use-filter--true" src="index.png" alt="">
+			<progress id="status-progress"></progress>
+			<div id="status-notice"></div>
+		</div>
 
-    #inputPrompt {
-      color: #eee;
-      font-size: 150%;
-      margin-bottom: 1em;
-      margin-top: 1em;
+		<script src="index.js"></script>
+		<script>
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":3996216,"index.wasm":35740641},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_THREADS_ENABLED = false;
+const engine = new Engine(GODOT_CONFIG);
 
-    }
+(function () {
+	const statusOverlay = document.getElementById('status');
+	const statusProgress = document.getElementById('status-progress');
+	const statusNotice = document.getElementById('status-notice');
 
-    #inputText {
-      width: 100%;
-      font-size: 175%;
-      padding: 5px;
-      background: inherit;
-      color: #eee;
-    }
+	let initializing = true;
+	let statusMode = '';
 
-    #inputText:focus {
-      color: #ffffff;
-    }
+	function setStatusMode(mode) {
+		if (statusMode === mode || !initializing) {
+			return;
+		}
+		if (mode === 'hidden') {
+			statusOverlay.remove();
+			initializing = false;
+			return;
+		}
+		statusOverlay.style.visibility = 'visible';
+		statusProgress.style.display = mode === 'progress' ? 'block' : 'none';
+		statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
+		statusMode = mode;
+	}
 
-    #ContextContainer {
-      position: absolute;
-      left: 0px;
-      top: 0px;
-      color: white;
-    }
+	function setStatusNotice(text) {
+		while (statusNotice.lastChild) {
+			statusNotice.removeChild(statusNotice.lastChild);
+		}
+		const lines = text.split('\n');
+		lines.forEach((line) => {
+			statusNotice.appendChild(document.createTextNode(line));
+			statusNotice.appendChild(document.createElement('br'));
+		});
+	}
 
-    #ContextContainer.shown {
-      background: rgba(0, 0, 0, 0.5);
-      border-radius: 0px 0px 5px 0px;
-    }
+	function displayFailureNotice(err) {
+		console.error(err);
+		if (err instanceof Error) {
+			setStatusNotice(err.message);
+		} else if (typeof err === 'string') {
+			setStatusNotice(err);
+		} else {
+			setStatusNotice('An unknown error occurred.');
+		}
+		setStatusMode('notice');
+		initializing = false;
+	}
 
-    #ContextButton {
-      text-decoration: none;
-      color: lightgrey;
-      font-size: xx-large;
-      cursor: pointer;
-      user-select: none;
-      -moz-user-select: none;
-      padding: 10px 10px;
-      opacity: .75;
-    }
+	const missing = Engine.getMissingFeatures({
+		threads: GODOT_THREADS_ENABLED,
+	});
 
-    #ContextButton:focus {
-      outline: none;
-      color: #ffffff;
-      opacity: 1.0;
-    }
-
-    #ContextMenu a {
-      text-decoration: none;
-      color: lightgrey;
-      background: #444;
-      height: 48px;
-      width: 250px;
-      border-radius: 5px;
-      border: 1px solid lightgrey;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 5px 5px;
-      opacity: 1.0;
-    }
-
-    #ContextMenu a:hover {
-      text-decoration: none;
-      background: #666666;
-      color: #ffffff
-    }
-
-    #presplash {
-        position: absolute;
-        top: 0;
-        left: 0;
-        display: block;
-        margin: auto;
-        width: 100%;
-        height: 100%;
-        object-fit: contain;
-    }
-
-  </style>
-
-</head>
-
-<body>
-  <canvas id="canvas" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
-  <div id="overlayDiv"></div>
-
-  <img id="presplash" src="web-presplash.jpg">
-
-  <div id="ContextContainer">
-    <a id="ContextButton">&#8801;</a><br />
-    <div id="ContextMenu" style="display: none;">
-      <input id="ID_SavegamesImport" type="file" onchange="onSavegamesImport(this)" accept="application/zip"
-        style=display:none></input>
-      <a href="javascript:document.getElementById('ID_SavegamesImport').click();">Import Saves</a>
-      <a href="javascript:onSavegamesExport();">Export Saves</a>
-      <a href="javascript:FSDownload('/log.txt', 'text/plain');">Download Log</a>
-      <a href="https://www.renpy.org/" target="_blank">
-          Powered by Ren'Py
-      </a>
-      </span>
-    </div>
-  </div>
-
-  <div id="statusDiv" class="hidden">
-    <div id="statusTextDiv"></div>
-    <progress id="statusProgress" value="0" max="100"></progress>
-  </div>
-
-  <div id="inputDiv" class="hidden">
-    <form id="inputForm">
-      <div id="inputPrompt"></div>
-      <input id="inputText" type="text">
-    </form>
-  </div>
-
-  <script>
-      // The URL to game.zip, relative to the URL of this file.
-      window.gameZipURL = 'game.zip';
-
-      // Register the service worker.
-      if (navigator.serviceWorker) {
-          if (!navigator.serviceWorker.controller) {
-              navigator.serviceWorker.register('./service-worker.js', { updateViaCache: 'all' });
-          }
-      }
-  </script>
-  <script src="renpy-pre.js"></script>
-  <script async type="text/javascript" src="renpy.js"></script>
-</body>
-
+	if (missing.length !== 0) {
+		if (GODOT_CONFIG['serviceWorker'] && GODOT_CONFIG['ensureCrossOriginIsolationHeaders'] && 'serviceWorker' in navigator) {
+			let serviceWorkerRegistrationPromise;
+			try {
+				serviceWorkerRegistrationPromise = navigator.serviceWorker.getRegistration();
+			} catch (err) {
+				serviceWorkerRegistrationPromise = Promise.reject(new Error('Service worker registration failed.'));
+			}
+			// There's a chance that installing the service worker would fix the issue
+			Promise.race([
+				serviceWorkerRegistrationPromise.then((registration) => {
+					if (registration != null) {
+						return Promise.reject(new Error('Service worker already exists.'));
+					}
+					return registration;
+				}).then(() => engine.installServiceWorker()),
+				// For some reason, `getRegistration()` can stall
+				new Promise((resolve) => {
+					setTimeout(() => resolve(), 2000);
+				}),
+			]).then(() => {
+				// Reload if there was no error.
+				window.location.reload();
+			}).catch((err) => {
+				console.error('Error while registering service worker:', err);
+			});
+		} else {
+			// Display the message as usual
+			const missingMsg = 'Error\nThe following features required to run Godot projects on the Web are missing:\n';
+			displayFailureNotice(missingMsg + missing.join('\n'));
+		}
+	} else {
+		setStatusMode('progress');
+		engine.startGame({
+			'onProgress': function (current, total) {
+				if (current > 0 && total > 0) {
+					statusProgress.value = current;
+					statusProgress.max = total;
+				} else {
+					statusProgress.removeAttribute('value');
+					statusProgress.removeAttribute('max');
+				}
+			},
+		}).then(() => {
+			setStatusMode('hidden');
+		}, displayFailureNotice);
+	}
+}());
+		</script>
+	</body>
 </html>
-
 
