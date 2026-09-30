@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>21&amp;InLove</title>
+    <meta name="description" content="21&InLove: un juego de blackjack con estilo visual novel donde cada partida puede terminar en un final romántico con sus personajes.">
+    <link rel="icon" href="logo.png">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chelsea+Market&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Destellos decorativos de fondo -->
+    <div class="sparkles" aria-hidden="true">
+        <span class="sparkle" style="top: 8%;  left: 9%;  font-size: 22px; animation-delay: 0s;">✦</span>
+        <span class="sparkle" style="top: 16%; right: 12%; font-size: 30px; animation-delay: 1.2s;">✦</span>
+        <span class="sparkle" style="top: 38%; left: 4%;  font-size: 16px; animation-delay: 2.4s;">✦</span>
+        <span class="sparkle" style="top: 52%; right: 6%; font-size: 20px; animation-delay: 0.6s;">✦</span>
+        <span class="sparkle" style="top: 70%; left: 12%; font-size: 26px; animation-delay: 3s;">✦</span>
+        <span class="sparkle" style="top: 84%; right: 15%; font-size: 18px; animation-delay: 1.8s;">✦</span>
+    </div>
+
+    <header>
+        <h1>
+            <img class="logo" src="logo.png" alt="21&amp;InLove">
+        </h1>
+        <p class="subtitle">Blackjack con final romántico</p>
+    </header>
+
+    <main>
+
+        <!-- ── JUEGO ── -->
+        <section class="game-wrapper">
+            <div class="game-frame">
+                <iframe
+                    src="game/index.html"
+                    title="21&amp;InLove"
+                    allowfullscreen>
+                </iframe>
+            </div>
+
+            <a class="fullscreen-btn" href="game/index.html" target="_blank">
+                ▶ Jugar en pantalla completa
+            </a>
+        </section>
+
+        <!-- ── DESCRIPCIÓN ── -->
+        <section class="description panel">
+            <span class="nametag">Sobre el juego</span>
+
+            <p>
+                Sentate a la mesa, repartí las cartas y tratá de llegar a 21.<br>
+                Cada mano te acerca un poco más a las chicas del juego.
+            </p>
+
+            <p>
+                Conocé a cada personaje, ganate su confianza y descubrí
+                el final romántico que tiene para vos.
+            </p>
+
+            <ul class="choices">
+                <li>Jugá al blackjack</li>
+                <li>Conocé a los personajes</li>
+                <li>Descubrí sus finales</li>
+            </ul>
+
+            <p class="warning">
+                ⚠ Contenido romántico para mayores de 18 años.
+            </p>
+        </section>
+
+        <!-- ── FEEDBACK ── -->
+        <section class="feedback panel">
+            <span class="nametag">Feedback</span>
+
+            <p>
+                Tus respuestas ayudan a definir futuras actualizaciones y eventos.
+            </p>
+
+            <iframe
+                src="https://docs.google.com/forms/d/e/1FAIpQLSf8UPTAxgR52QWO84uwQGHS0nvGBs79b3EROLpUTMwI8CcbSA/viewform?usp=publish-editor"
+                title="Formulario de feedback"
+                width="640"
+                height="800"
+                frameborder="0">
+            </iframe>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>© 2026 – 21&amp;InLove · Juego indie</p>
+    </footer>
+
+</body>
+</html>
