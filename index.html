@@ -1,220 +1,478 @@
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
-		<title>El Conde</title>
-		<style>
-html, body, #canvas {
-	margin: 0;
-	padding: 0;
-	border: 0;
-}
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tattoo Studio Simulator — Demo</title>
+<meta name="description" content="Demo jugable de Tattoo Studio Simulator: sal de la cárcel, abre tu estudio y tatúa a mano a tus clientes.">
+<style>
+  :root {
+    --bg: #141212;
+    --bg-2: #1c1918;
+    --panel: #221e1c;
+    --line: #3a3330;
+    --text: #ece8e2;
+    --muted: #a39d95;
+    --paper: #f2ede0;
+    --accent: #c77360;
+    --accent-2: #e0927f;
+    --neon: #ff5c8d;
+    --good: #8cd99a;
+    --radius: 12px;
+    --max: 1180px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: radial-gradient(1200px 600px at 50% -200px, #2a1f1c 0%, var(--bg) 60%) fixed, var(--bg);
+    color: var(--text);
+    font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  a { color: var(--accent-2); }
+  .wrap { max-width: var(--max); margin: 0 auto; padding: 0 16px; }
 
-body {
-	color: white;
-	background-color: black;
-	overflow: hidden;
-	touch-action: none;
-}
+  /* Cabecera */
+  header.top {
+    display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+    padding: 22px 0 18px;
+  }
+  .logo {
+    font-weight: 800; letter-spacing: .06em; font-size: clamp(22px, 3.2vw, 32px);
+    text-transform: uppercase; margin: 0; line-height: 1.1;
+  }
+  .logo span { color: var(--neon); text-shadow: 0 0 18px rgba(255, 92, 141, .55); }
+  .badge {
+    display: inline-block; padding: 4px 10px; border-radius: 999px;
+    background: var(--accent); color: #1a1110; font-weight: 800; font-size: 13px;
+    letter-spacing: .12em;
+  }
+  .tagline { color: var(--muted); margin: 0; flex-basis: 100%; }
 
-#canvas {
-	display: block;
-}
+  /* Reproductor */
+  .player-card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    overflow: hidden; box-shadow: 0 20px 60px rgba(0, 0, 0, .45);
+  }
+  .stage {
+    position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000;
+  }
+  .stage iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
+  .stage:fullscreen { aspect-ratio: auto; width: 100vw; height: 100vh; }
+  .cover {
+    position: absolute; inset: 0; display: grid; place-items: center; cursor: pointer;
+    background: center / cover no-repeat url("assets/recepcion.jpg");
+  }
+  .cover::before { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.65)); }
+  .cover-inner { position: relative; text-align: center; padding: 16px; }
+  .play-btn {
+    display: inline-flex; align-items: center; gap: 12px;
+    font: inherit; font-size: clamp(18px, 2.4vw, 24px); font-weight: 800;
+    padding: 16px 30px; border: 0; border-radius: 999px; cursor: pointer;
+    background: var(--accent); color: #1a1110;
+    box-shadow: 0 10px 30px rgba(199, 115, 96, .45);
+    transition: transform .15s ease, background .15s ease;
+  }
+  .play-btn:hover { transform: scale(1.04); background: var(--accent-2); }
+  .play-btn svg { width: 22px; height: 22px; }
+  .cover-note { color: #ece6de; margin: 14px 0 0; font-size: 14px; text-shadow: 0 1px 3px #000, 0 0 12px #000; }
+  .notice {
+    position: absolute; inset: 0; display: none; place-items: center; text-align: center;
+    background: var(--bg-2); padding: 24px;
+  }
+  .notice.show { display: grid; }
+  .notice h3 { margin: 0 0 8px; }
+  .notice p { margin: 6px 0; color: var(--muted); max-width: 560px; }
+  .notice code { color: var(--paper); background: #000; padding: 2px 6px; border-radius: 4px; }
 
-#canvas:focus {
-	outline: none;
-}
+  .toolbar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 10px 12px; border-top: 1px solid var(--line); background: var(--bg-2);
+  }
+  .toolbar .spacer { flex: 1; }
+  .tool {
+    display: inline-flex; align-items: center; gap: 8px; font: inherit; font-size: 14px;
+    padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); cursor: pointer;
+    background: #2a2523; color: var(--text); text-decoration: none;
+  }
+  .tool:hover { border-color: var(--accent); }
+  .tool svg { width: 16px; height: 16px; }
+  .tool[disabled] { opacity: .45; cursor: not-allowed; }
+  .status { color: var(--muted); font-size: 13px; }
 
-#status, #status-splash, #status-progress {
-	position: absolute;
-	left: 0;
-	right: 0;
-}
+  /* Contenido */
+  main { padding: 26px 0 40px; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; margin-top: 28px; }
+  section { margin-bottom: 30px; }
+  h2 {
+    font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-2);
+    margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line);
+  }
+  h3 { margin: 18px 0 6px; font-size: 18px; }
+  p { margin: 0 0 12px; }
+  .lead { font-size: 18px; color: var(--paper); }
+  ol.steps { counter-reset: step; list-style: none; padding: 0; margin: 0; }
+  ol.steps li { counter-increment: step; position: relative; padding: 0 0 12px 44px; }
+  ol.steps li::before {
+    content: counter(step); position: absolute; left: 0; top: 0; width: 30px; height: 30px;
+    border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 14px;
+    background: var(--accent); color: #1a1110;
+  }
+  ul.ticks { padding-left: 20px; margin: 0; }
+  ul.ticks li { margin-bottom: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  td, th { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; }
+  kbd {
+    display: inline-block; min-width: 1.6em; padding: 1px 7px; border-radius: 5px; text-align: center;
+    background: #2e2826; border: 1px solid #4a423e; border-bottom-width: 3px;
+    font: 600 13px/1.5 ui-monospace, Consolas, monospace; color: var(--paper);
+  }
+  .modes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+  .mode {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden;
+  }
+  .mode img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
+  .mode div { padding: 12px 14px 14px; }
+  .mode h3 { margin: 0 0 6px; font-size: 17px; }
+  .mode p { color: var(--muted); font-size: 14px; margin: 0; }
+  .tag { display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .08em; padding: 2px 8px; border-radius: 999px; margin-left: 6px; vertical-align: 2px; }
+  .tag.web { background: #3b2f1f; color: #f0c27a; }
 
-#status, #status-splash {
-	top: 0;
-	bottom: 0;
-}
+  aside .box {
+    background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 16px 18px; margin-bottom: 18px;
+  }
+  aside dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; font-size: 14px; }
+  aside dt { color: var(--muted); }
+  aside dd { margin: 0; }
+  .demo-box { border-color: var(--accent) !important; }
+  .demo-box p { font-size: 14px; color: var(--muted); }
+  .demo-box strong { color: var(--paper); }
 
-#status {
-	background-color: #242424;
-	display: flex;
-	flex-direction: column;
-	justify-content: center;
-	align-items: center;
-	visibility: hidden;
-}
+  .gallery { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .gallery button { padding: 0; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; cursor: zoom-in; background: #000; }
+  .gallery img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; transition: transform .2s ease; }
+  .gallery button:hover img { transform: scale(1.04); }
 
-#status-splash {
-	max-height: 100%;
-	max-width: 100%;
-	margin: auto;
-}
+  dialog.lightbox {
+    border: 0; padding: 0; background: transparent; max-width: min(1280px, 94vw);
+  }
+  dialog.lightbox::backdrop { background: rgba(0, 0, 0, .85); }
+  dialog.lightbox img { width: 100%; height: auto; display: block; border-radius: 8px; }
+  dialog.lightbox p { color: var(--paper); text-align: center; margin: 10px 0 0; }
 
-#status-splash.show-image--false {
-	display: none;
-}
+  footer { border-top: 1px solid var(--line); padding: 20px 0 30px; color: var(--muted); font-size: 13px; }
 
-#status-splash.fullsize--true {
-	height: 100%;
-	width: 100%;
-	object-fit: contain;
-}
+  @media (max-width: 900px) {
+    .grid { grid-template-columns: 1fr; }
+    .modes { grid-template-columns: 1fr; }
+    .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 520px) {
+    .toolbar .status { flex-basis: 100%; order: 10; }
+    td, th { padding: 7px 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1 class="logo">Tattoo Studio <span>Simulator</span></h1>
+    <span class="badge">DEMO</span>
+    <p class="tagline">Último día en la cárcel. Mañana sales libre… y con una máquina de segunda mano vas a abrir tu propio estudio.</p>
+  </header>
 
-#status-splash.use-filter--false {
-	image-rendering: pixelated;
-}
+  <!-- Ventana del juego -->
+  <div class="player-card">
+    <div class="stage" id="stage">
+      <div class="cover" id="cover" role="button" tabindex="0" aria-label="Jugar la demo">
+        <div class="cover-inner">
+          <button class="play-btn" id="play" type="button">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+            Jugar la demo
+          </button>
+          <p class="cover-note">Se juega con ratón (o tableta gráfica). Recomendado: Chrome, Edge o Firefox de escritorio.</p>
+        </div>
+      </div>
+      <div class="notice" id="notice"></div>
+    </div>
+    <div class="toolbar">
+      <button class="tool" id="btn-fs" type="button" title="Pantalla completa (F)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+        Pantalla completa
+      </button>
+      <button class="tool" id="btn-reload" type="button" title="Volver a cargar el juego" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
+        Recargar
+      </button>
+      <button class="tool" id="btn-stop" type="button" title="Cerrar el juego" disabled>
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+        Cerrar
+      </button>
+      <a class="tool" id="btn-tab" href="game/game.html" target="_blank" rel="noopener" title="Abrir el juego solo, en otra pestaña">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/></svg>
+        Abrir en otra pestaña
+      </a>
+      <span class="spacer"></span>
+      <span class="status" id="status">Versión demo · el progreso se guarda en este navegador</span>
+    </div>
+  </div>
 
-#status-progress, #status-notice {
-	display: none;
-}
+  <main>
+    <div class="grid">
+      <div>
+        <section>
+          <h2>Sobre el juego</h2>
+          <p class="lead">Un simulador de estudio de tatuajes en el que <strong>tatúas a mano</strong>: sigues la línea del esténcil con la máquina sobre la piel de un cliente que se mueve, se queja y paga según lo bien que lo hagas.</p>
+          <p>Empiezas en la celda, haciéndole una estrella a tu compañero con una máquina casera. Al salir alquilas un local pequeño: atiendes citas, eliges diseños de tu cuaderno de bocetos, colocas el esténcil, tatúas, sacas la foto para la pared y cobras. Con cada trabajo bien hecho sube tu reputación y llegan clientes nuevos que pagan más.</p>
+          <ul class="ticks">
+            <li><strong>Tatuaje a mano de verdad:</strong> la tinta se queda en la piel 3D, la máquina vibra y, si al cliente le duele, se mueve y estropea la línea.</li>
+            <li><strong>Clientes con carácter:</strong> cada uno pide algo distinto, tiene su presupuesto y su aguante al dolor, y vuelve con los tatuajes que ya le hiciste.</li>
+            <li><strong>Gestión del estudio:</strong> citas, tinta que se gasta, máquinas mejores, diseños nuevos y una pared con las fotos de tus trabajos.</li>
+            <li><strong>15 zonas del cuerpo</strong> en el modo libre: brazos, antebrazos, manos, pecho, abdomen, espalda, cara, muslos y piernas.</li>
+          </ul>
+        </section>
 
-#status-progress {
-	bottom: 10%;
-	width: 50%;
-	margin: 0 auto;
-}
+        <section>
+          <h2>Cómo se juega</h2>
+          <ol class="steps">
+            <li><strong>Tutorial en la cárcel.</strong> Tu compañero de celda te pide una estrella en el antebrazo. Te enseña todo el proceso.</li>
+            <li><strong>Abre el día.</strong> En el <em>portátil</em> del mostrador ves las solicitudes de cita: dales cita o recházalas. Los clientes con cita entran y se sientan en el sofá.</li>
+            <li><strong>Habla con el cliente.</strong> Escucha lo que pide y acepta el trabajo (o piénsalo y mira antes tu cuaderno o la tienda).</li>
+            <li><strong>Elige el diseño</strong> en tu cuaderno de bocetos y <strong>coloca el esténcil</strong>: zona del cuerpo, tamaño y rotación.</li>
+            <li><strong>Tatúa siguiendo la línea.</strong> Vigila la barra de dolor: suelta de vez en cuando para que el cliente descanse. Repasar mucho o usar una aguja gruesa duele más.</li>
+            <li><strong>Saca la foto</strong> del tatuaje (es obligatoria), <strong>cobra</strong> y atiende a la siguiente cita. Cuando no quede nadie, cierra el estudio con la puerta de la calle.</li>
+          </ol>
+        </section>
 
-#status-notice {
-	background-color: #5b3943;
-	border-radius: 0.5rem;
-	border: 1px solid #9b3943;
-	color: #e0e0e0;
-	font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
-	line-height: 1.3;
-	margin: 0 2rem;
-	overflow: hidden;
-	padding: 1rem;
-	text-align: center;
-	z-index: 1;
-}
-		</style>
-		<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
-<link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
+        <section>
+          <h2>Controles</h2>
+          <table>
+            <thead><tr><th>Acción</th><th>Control</th></tr></thead>
+            <tbody>
+              <tr><td>Tatuar (enciende la máquina)</td><td>Mantener <kbd>Clic izq.</kbd></td></tr>
+              <tr><td>Girar la cámara</td><td>Mantener <kbd>Clic der.</kbd> o <kbd>Espacio</kbd> y mover el ratón</td></tr>
+              <tr><td>Acercar / alejar</td><td><kbd>Rueda</kbd></td></tr>
+              <tr><td>Mover la vista</td><td>Mantener el <kbd>botón de la rueda</kbd> y mover el ratón</td></tr>
+              <tr><td>Tamaño de aguja</td><td><kbd>[</kbd> <kbd>]</kbd> o <kbd>+</kbd> <kbd>−</kbd> (o el control del panel)</td></tr>
+              <tr><td>Mover el esténcil</td><td><kbd>Clic</kbd> / arrastrar sobre la piel</td></tr>
+              <tr><td>Rotar el esténcil</td><td><kbd>Q</kbd> <kbd>E</kbd></td></tr>
+              <tr><td>Usar algo de la recepción</td><td><kbd>Clic</kbd> sobre el objeto (se ilumina al pasar por encima)</td></tr>
+              <tr><td>Pasar página del cuaderno</td><td><kbd>←</kbd> <kbd>→</kbd></td></tr>
+              <tr><td>Plegar un panel</td><td>Botón <kbd>− Ocultar</kbd> de su cabecera</td></tr>
+              <tr><td>Pantalla completa (en esta página)</td><td><kbd>F</kbd> fuera del juego, o el botón de abajo del juego</td></tr>
+            </tbody>
+          </table>
+          <p style="margin-top:12px;color:var(--muted);font-size:14px">Si algo no aparece o el juego no avanza, pulsa <strong>Desatascar</strong> en la barra superior del estudio.</p>
+        </section>
 
-	</head>
-	<body>
-		<canvas id="canvas">
-			Your browser does not support the canvas tag.
-		</canvas>
+        <section>
+          <h2>Modos</h2>
+          <div class="modes">
+            <article class="mode">
+              <img src="assets/tatuando.jpg" alt="Tatuando una estrella en la espalda de un cliente" loading="lazy">
+              <div>
+                <h3>Estudio</h3>
+                <p>La partida: tutorial, días, citas, clientes, reputación, tinta, máquinas y diseños.</p>
+              </div>
+            </article>
+            <article class="mode">
+              <img src="assets/modo-libre.jpg" alt="Maniquí con tatuajes en el modo libre" loading="lazy">
+              <div>
+                <h3>Modo libre</h3>
+                <p>Un maniquí para practicar en cualquier zona, sin dolor ni dinero. Lo que tatúas se guarda.</p>
+              </div>
+            </article>
+            <article class="mode">
+              <img src="assets/amigos.jpg" alt="Un amigo tatuando el avatar en directo" loading="lazy">
+              <div>
+                <h3>Amigos <span class="tag web">SOLO ESCRITORIO</span></h3>
+                <p>Presta tu avatar para que un amigo te tatúe en directo. Necesita la versión de escritorio.</p>
+              </div>
+            </article>
+          </div>
+        </section>
 
-		<noscript>
-			Your browser does not support JavaScript.
-		</noscript>
+        <section>
+          <h2>Capturas</h2>
+          <div class="gallery" id="gallery">
+            <button type="button" data-caption="Tutorial: tu último día en la cárcel"><img src="assets/carcel.jpg" alt="La celda del tutorial" loading="lazy"></button>
+            <button type="button" data-caption="La recepción de tu estudio: el cliente espera en el sofá"><img src="assets/recepcion.jpg" alt="Recepción del estudio" loading="lazy"></button>
+            <button type="button" data-caption="El portátil: citas del día y diseños nuevos"><img src="assets/portatil.jpg" alt="Portátil con las citas" loading="lazy"></button>
+            <button type="button" data-caption="Tu cuaderno de bocetos"><img src="assets/cuaderno.jpg" alt="Cuaderno de bocetos" loading="lazy"></button>
+            <button type="button" data-caption="El resultado: adecuación, ejecución, dolor y pago"><img src="assets/resultado.jpg" alt="Pantalla de resultado" loading="lazy"></button>
+            <button type="button" data-caption="La pared con las fotos de tus trabajos"><img src="assets/fotos.jpg" alt="Pared de fotos" loading="lazy"></button>
+          </div>
+        </section>
+      </div>
 
-		<div id="status">
-			<img id="status-splash" class="show-image--true fullsize--true use-filter--true" src="index.png" alt="">
-			<progress id="status-progress"></progress>
-			<div id="status-notice"></div>
-		</div>
+      <aside>
+        <div class="box demo-box">
+          <h2>Esto es una demo</h2>
+          <p>Una versión temprana para probar el juego en el navegador. <strong>Faltan cosas, hay modelos provisionales</strong> y puede haber fallos.</p>
+          <p>Tu progreso (día, dinero, tatuajes, fotos) se guarda <strong>en este navegador</strong>. Si borras los datos del sitio, empiezas de cero.</p>
+          <p>El modo <strong>Amigos</strong> no funciona en la web: los navegadores no permiten la conexión directa entre equipos que usa.</p>
+        </div>
 
-		<script src="index.js"></script>
-		<script>
-const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":72522912,"index.wasm":35740641},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
-const GODOT_THREADS_ENABLED = false;
-const engine = new Engine(GODOT_CONFIG);
+        <div class="box">
+          <h2>Ficha</h2>
+          <dl>
+            <dt>Estado</dt><dd>Demo · prototipo 0.3</dd>
+            <dt>Género</dt><dd>Simulación, gestión</dd>
+            <dt>Plataforma</dt><dd>Navegador (escritorio)</dd>
+            <dt>Idioma</dt><dd>Español</dd>
+            <dt>Control</dt><dd>Ratón o tableta gráfica</dd>
+            <dt>Motor</dt><dd>Godot 4.6</dd>
+          </dl>
+        </div>
 
-(function () {
-	const statusOverlay = document.getElementById('status');
-	const statusProgress = document.getElementById('status-progress');
-	const statusNotice = document.getElementById('status-notice');
+        <div class="box">
+          <h2>Consejos</h2>
+          <ul class="ticks" style="font-size:14px">
+            <li>Lee bien lo que pide el cliente: el diseño que eliges cuenta tanto como lo bien que lo tatúes.</li>
+            <li>No dejes la aguja quieta en el mismo sitio: duele mucho y el cliente se mueve.</li>
+            <li>La tinta se acaba: mira la estantería antes de aceptar trabajos.</li>
+            <li>Una máquina mejor vibra menos y duele menos: la tienes en la vitrina.</li>
+            <li>Con más estrellas de reputación llegan clientes que pagan mejor.</li>
+          </ul>
+        </div>
 
-	let initializing = true;
-	let statusMode = '';
+        <div class="box">
+          <h2>Requisitos</h2>
+          <ul class="ticks" style="font-size:14px">
+            <li>Navegador de escritorio con WebGL 2 (Chrome, Edge o Firefox recientes).</li>
+            <li>Ratón con rueda recomendado. Funciona con tableta gráfica (sin presión).</li>
+            <li>La primera carga puede tardar un poco.</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </main>
 
-	function setStatusMode(mode) {
-		if (statusMode === mode || !initializing) {
-			return;
-		}
-		if (mode === 'hidden') {
-			statusOverlay.remove();
-			initializing = false;
-			return;
-		}
-		statusOverlay.style.visibility = 'visible';
-		statusProgress.style.display = mode === 'progress' ? 'block' : 'none';
-		statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
-		statusMode = mode;
-	}
+  <footer>
+    Tattoo Studio Simulator — demo jugable. Hecho con Godot Engine.
+  </footer>
+</div>
 
-	function setStatusNotice(text) {
-		while (statusNotice.lastChild) {
-			statusNotice.removeChild(statusNotice.lastChild);
-		}
-		const lines = text.split('\n');
-		lines.forEach((line) => {
-			statusNotice.appendChild(document.createTextNode(line));
-			statusNotice.appendChild(document.createElement('br'));
-		});
-	}
+<dialog class="lightbox" id="lightbox">
+  <img id="lightbox-img" alt="">
+  <p id="lightbox-caption"></p>
+</dialog>
 
-	function displayFailureNotice(err) {
-		console.error(err);
-		if (err instanceof Error) {
-			setStatusNotice(err.message);
-		} else if (typeof err === 'string') {
-			setStatusNotice(err);
-		} else {
-			setStatusNotice('An unknown error occurred.');
-		}
-		setStatusMode('notice');
-		initializing = false;
-	}
+<script>
+(() => {
+  const GAME_URL = "game/game.html";
+  const stage = document.getElementById("stage");
+  const cover = document.getElementById("cover");
+  const notice = document.getElementById("notice");
+  const status = document.getElementById("status");
+  const btnFs = document.getElementById("btn-fs");
+  const btnReload = document.getElementById("btn-reload");
+  const btnStop = document.getElementById("btn-stop");
+  let frame = null;
 
-	const missing = Engine.getMissingFeatures({
-		threads: GODOT_THREADS_ENABLED,
-	});
+  function showNotice(html) {
+    notice.innerHTML = html;
+    notice.classList.add("show");
+  }
 
-	if (missing.length !== 0) {
-		if (GODOT_CONFIG['serviceWorker'] && GODOT_CONFIG['ensureCrossOriginIsolationHeaders'] && 'serviceWorker' in navigator) {
-			let serviceWorkerRegistrationPromise;
-			try {
-				serviceWorkerRegistrationPromise = navigator.serviceWorker.getRegistration();
-			} catch (err) {
-				serviceWorkerRegistrationPromise = Promise.reject(new Error('Service worker registration failed.'));
-			}
-			// There's a chance that installing the service worker would fix the issue
-			Promise.race([
-				serviceWorkerRegistrationPromise.then((registration) => {
-					if (registration != null) {
-						return Promise.reject(new Error('Service worker already exists.'));
-					}
-					return registration;
-				}).then(() => engine.installServiceWorker()),
-				// For some reason, `getRegistration()` can stall
-				new Promise((resolve) => {
-					setTimeout(() => resolve(), 2000);
-				}),
-			]).then(() => {
-				// Reload if there was no error.
-				window.location.reload();
-			}).catch((err) => {
-				console.error('Error while registering service worker:', err);
-			});
-		} else {
-			// Display the message as usual
-			const missingMsg = 'Error\nThe following features required to run Godot projects on the Web are missing:\n';
-			displayFailureNotice(missingMsg + missing.join('\n'));
-		}
-	} else {
-		setStatusMode('progress');
-		engine.startGame({
-			'onProgress': function (current, total) {
-				if (current > 0 && total > 0) {
-					statusProgress.value = current;
-					statusProgress.max = total;
-				} else {
-					statusProgress.removeAttribute('value');
-					statusProgress.removeAttribute('max');
-				}
-			},
-		}).then(() => {
-			setStatusMode('hidden');
-		}, displayFailureNotice);
-	}
-}());
-		</script>
-	</body>
+  // Abierta como archivo (file://) el juego no puede cargar: Godot web necesita un servidor.
+  if (location.protocol === "file:") {
+    status.textContent = "Ábrela desde un servidor local para jugar (ver LEEME.md)";
+  }
+
+  async function gameExists() {
+    if (location.protocol === "file:") return false;
+    try {
+      const r = await fetch(GAME_URL, { method: "HEAD", cache: "no-store" });
+      return r.ok;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  async function start() {
+    if (frame) return;
+    if (!(await gameExists())) {
+      cover.style.display = "none";
+      showNotice(location.protocol === "file:"
+        ? "<div><h3>Hay que abrir la página desde un servidor</h3><p>Los juegos web de Godot no se pueden abrir con doble clic en el archivo. En esta carpeta, ejecuta <code>python serve.py</code> y entra en <code>http://localhost:8000</code>.</p></div>"
+        : "<div><h3>Todavía no está el juego</h3><p>Exporta el juego para web con el nombre <code>game.html</code> y copia todos los archivos de la exportación dentro de la carpeta <code>game/</code>.</p></div>");
+      return;
+    }
+    notice.classList.remove("show");
+    cover.style.display = "none";
+    frame = document.createElement("iframe");
+    frame.src = GAME_URL;
+    frame.title = "Tattoo Studio Simulator (demo)";
+    frame.allow = "autoplay; fullscreen; gamepad; cross-origin-isolated; clipboard-write";
+    frame.setAttribute("allowfullscreen", "");
+    stage.appendChild(frame);
+    frame.addEventListener("load", () => frame.focus());
+    btnReload.disabled = false;
+    btnStop.disabled = false;
+    status.textContent = "Demo en marcha · el progreso se guarda en este navegador";
+  }
+
+  function stop() {
+    if (!frame) return;
+    if (document.fullscreenElement) document.exitFullscreen();
+    frame.remove();
+    frame = null;
+    cover.style.display = "";
+    btnReload.disabled = true;
+    btnStop.disabled = true;
+    status.textContent = "Versión demo · el progreso se guarda en este navegador";
+  }
+
+  function reload() {
+    if (!frame) return;
+    frame.src = GAME_URL;
+  }
+
+  async function fullscreen() {
+    if (!frame) await start();
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
+    } else if (stage.requestFullscreen) {
+      stage.requestFullscreen().catch(() => {});
+    }
+    if (frame) frame.focus();
+  }
+
+  document.getElementById("play").addEventListener("click", (e) => { e.stopPropagation(); start(); });
+  cover.addEventListener("click", start);
+  cover.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); start(); } });
+  btnFs.addEventListener("click", fullscreen);
+  btnReload.addEventListener("click", reload);
+  btnStop.addEventListener("click", stop);
+  document.addEventListener("fullscreenchange", () => {
+    btnFs.lastChild.textContent = document.fullscreenElement ? " Salir de pantalla completa" : " Pantalla completa";
+  });
+  // «F» para pantalla completa (solo cuando el foco no está dentro del juego).
+  document.addEventListener("keydown", (e) => {
+    if ((e.key === "f" || e.key === "F") && !e.ctrlKey && !e.metaKey && !e.altKey
+        && !(e.target instanceof HTMLInputElement)) {
+      fullscreen();
+    }
+  });
+
+  // Galería
+  const lightbox = document.getElementById("lightbox");
+  const lbImg = document.getElementById("lightbox-img");
+  const lbCaption = document.getElementById("lightbox-caption");
+  document.getElementById("gallery").addEventListener("click", (e) => {
+    const b = e.target.closest("button");
+    if (!b) return;
+    const img = b.querySelector("img");
+    lbImg.src = img.src;
+    lbImg.alt = img.alt;
+    lbCaption.textContent = b.dataset.caption || "";
+    lightbox.showModal();
+  });
+  lightbox.addEventListener("click", () => lightbox.close());
+})();
+</script>
+</body>
 </html>
-
