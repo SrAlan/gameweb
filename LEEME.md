@@ -1,35 +1,30 @@
 # Web de la demo — Tattoo Studio Simulator
 
-Página para enseñar y jugar la demo en el navegador: ventana del juego con pantalla completa, recargar y abrir en otra pestaña, y debajo la información del juego (qué es, cómo se juega, controles, modos, capturas y notas de la demo).
+Página para presentar la demo y descargarla: arriba un escaparate de capturas (como en las tiendas de juegos: imagen grande, miniaturas, flechas y ampliar al hacer clic) con la ficha del juego, la barra de descarga y debajo la información (qué es, cómo se juega, controles, modos, instalación, requisitos y cómo jugar con amigos).
 
 ```
 index.html     La página
 assets/        Capturas del juego
-game/          Aquí va la exportación web (game.html y el resto de archivos)
-serve.py       Servidor local para probarla
+game/          Aquí va el .rar de la demo
+serve.py       Servidor local para verla (opcional)
 ```
 
-## Poner el juego
+## Poner la descarga
 
-1. En Godot: *Proyecto → Exportar… → Añadir… → Web*. Si es la primera vez, instala las plantillas de exportación cuando lo pida.
-2. *Ruta de exportación*: `game.html` (dentro de una carpeta cualquiera).
-3. Exporta y copia **todos** los archivos que salen (`game.html`, `game.js`, `game.wasm`, `game.pck`, `game.png`…) dentro de `game/`.
+1. En Godot: *Proyecto → Exportar… → Añadir… → Windows Desktop* y exporta el ejecutable (con el `.pck` al lado o incrustado).
+2. Comprime la carpeta exportada en un `.rar` llamado **`TattooStudioSimulator-Demo.rar`**.
+3. Cópialo dentro de `game/`.
 
-Notas de la exportación:
-- La web usa el renderizador **Compatibility** (Godot lo hace solo al exportar para web). Algunos efectos se ven algo distintos que en escritorio.
-- Si en la exportación dejas activado **Thread Support**, el servidor tiene que mandar las cabeceras COOP/COEP (lo hace `serve.py`; en itch.io, marca *SharedArrayBuffer support*). Sin hilos no hacen falta.
-- El modo **Amigos** no funciona en la web (usa conexiones UDP directas que los navegadores no permiten). La página ya lo avisa.
+Si prefieres otro nombre, cámbialo en `index.html`, en la línea:
 
-## Probarla en el equipo
-
-Los juegos web de Godot no se pueden abrir con doble clic en el archivo. En esta carpeta:
-
-```
-python serve.py
+```js
+const DOWNLOAD_FILE = "game/TattooStudioSimulator-Demo.rar";
 ```
 
-y abre <http://localhost:8000>. Si `game/game.html` aún no está, la página lo dice al pulsar «Jugar la demo».
+## Verla en el equipo
+
+Basta con abrir `index.html`. Con el servidor (`python serve.py` → <http://localhost:8000>) la página además comprueba que el archivo está: si falta, el botón dice «Próximamente»; si está, muestra su tamaño.
 
 ## Subirla
 
-Se puede subir tal cual a cualquier hosting de páginas estáticas (GitHub Pages, Netlify, itch.io como HTML…). Si la exportación usa hilos, el hosting tiene que mandar las cabeceras `Cross-Origin-Opener-Policy: same-origin` y `Cross-Origin-Embedder-Policy: require-corp`.
+Se sube tal cual a cualquier hosting de páginas estáticas (GitHub Pages, Netlify…). Ojo: GitHub no acepta archivos de más de 100 MB en el repositorio; si el .rar pesa más, súbelo a otro sitio (Google Drive, itch.io, Mega…) y pon ese enlace en `DOWNLOAD_FILE`.
