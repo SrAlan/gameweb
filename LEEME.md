@@ -1,6 +1,6 @@
 # Web de la demo — Tattoo Studio Simulator
 
-Página para presentar la demo y descargarla: arriba un escaparate de capturas (como en las tiendas de juegos: imagen grande, miniaturas, flechas y ampliar al hacer clic) con la ficha del juego, la barra de descarga y debajo la información (qué es, cómo se juega, controles, modos, instalación, requisitos y cómo jugar con amigos).
+Página para presentar la demo y descargarla, pensada para enviarla a cualquiera: portada con el botón de descarga, galería de capturas como en las tiendas (miniaturas, flechas y ampliar al hacer clic), la novedad destacada (dibujar tus diseños), tarjetas con lo que se hace en el juego, tres pasos para empezar y dudas rápidas plegables. Sin detalles técnicos.
 
 ```
 index.html     La página

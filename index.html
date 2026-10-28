@@ -4,29 +4,29 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Tattoo Studio Simulator — Demo</title>
-<meta name="description" content="Descarga la demo de Tattoo Studio Simulator: sal de la cárcel, abre tu estudio y tatúa a mano a tus clientes.">
+<meta name="description" content="Descarga la demo de Tattoo Studio Simulator: sal de la cárcel, abre tu estudio, dibuja tus diseños y tatúa a mano a tus clientes.">
 <style>
   :root {
-    --bg: #141212;
-    --bg-2: #1c1918;
-    --panel: #221e1c;
-    --line: #3a3330;
-    --text: #ece8e2;
-    --muted: #a39d95;
-    --paper: #f2ede0;
-    --accent: #c77360;
-    --accent-2: #e0927f;
-    --neon: #ff5c8d;
+    --bg: #0e1218;
+    --bg-2: #151b23;
+    --panel: #18202a;
+    --line: #2a3644;
+    --text: #e6ecf2;
+    --muted: #8d9aab;
+    --paper: #f3f6f9;
+    --accent: #3fb6e8;
+    --accent-2: #7fd1f5;
+    --neon: #ff4fa3;
     --download: #5c9e3a;
     --download-2: #73bd4b;
-    --radius: 12px;
+    --radius: 10px;
     --max: 1180px;
   }
   * { box-sizing: border-box; }
   html { scroll-behavior: smooth; }
   body {
     margin: 0;
-    background: radial-gradient(1200px 600px at 50% -200px, #2a1f1c 0%, var(--bg) 60%) fixed, var(--bg);
+    background: radial-gradient(1200px 600px at 50% -200px, #1b2a3a 0%, var(--bg) 60%) fixed, var(--bg);
     color: var(--text);
     font: 16px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   }
@@ -39,32 +39,36 @@
     font-weight: 800; letter-spacing: .06em; font-size: clamp(22px, 3.2vw, 32px);
     text-transform: uppercase; margin: 0; line-height: 1.1;
   }
-  .logo span { color: var(--neon); text-shadow: 0 0 18px rgba(255, 92, 141, .55); }
+  .logo span { color: var(--neon); text-shadow: 0 0 18px rgba(255, 79, 163, .55); }
   .badge {
     display: inline-block; padding: 4px 10px; border-radius: 999px;
-    background: var(--accent); color: #1a1110; font-weight: 800; font-size: 13px; letter-spacing: .12em;
+    background: var(--accent); color: #06141c; font-weight: 800; font-size: 13px; letter-spacing: .12em;
   }
   .tagline { color: var(--muted); margin: 0; flex-basis: 100%; }
 
-  /* Escaparate tipo tienda: capturas a la izquierda, ficha a la derecha */
+  /* Escaparate tipo tienda: vídeos y capturas a la izquierda, ficha a la derecha */
   .showcase {
     display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 18px;
     background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
     padding: 14px; box-shadow: 0 20px 60px rgba(0, 0, 0, .45);
   }
   .showcase > div { min-width: 0; } /* Que la tira de miniaturas no ensanche la columna */
-  .viewer { position: relative; aspect-ratio: 16 / 9; background: #000; border-radius: 8px; overflow: hidden; }
-  .viewer img {
+  .viewer { position: relative; aspect-ratio: 16 / 9; background: #000; border-radius: 6px; overflow: hidden; }
+  .viewer img, .viewer video {
     position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
-    opacity: 0; transition: opacity .35s ease; cursor: zoom-in;
+    opacity: 0; visibility: hidden; transition: opacity .35s ease, visibility .35s;
   }
-  .viewer img.on { opacity: 1; }
+  .viewer img { cursor: zoom-in; }
+  .viewer video { object-fit: contain; background: #000; }
+  .viewer .on { opacity: 1; visibility: visible; }
   .viewer .caption {
     position: absolute; left: 0; right: 0; bottom: 0; padding: 26px 14px 10px; font-size: 14px;
     color: var(--paper); background: linear-gradient(transparent, rgba(0, 0, 0, .75)); pointer-events: none;
+    transition: opacity .3s ease;
   }
+  .viewer.playing .caption { opacity: 0; }
   .nav {
-    position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 64px;
+    position: absolute; top: 50%; transform: translateY(-50%); width: 44px; height: 64px; z-index: 2;
     border: 0; border-radius: 6px; cursor: pointer; background: rgba(0, 0, 0, .45); color: #fff;
     display: grid; place-items: center; opacity: 0; transition: opacity .2s ease, background .2s ease;
   }
@@ -80,29 +84,33 @@
     scrollbar-width: thin; scrollbar-color: var(--line) transparent;
   }
   .thumbs button {
-    flex: 0 0 auto; width: 132px; aspect-ratio: 16 / 9; padding: 0; border: 2px solid transparent;
-    border-radius: 6px; overflow: hidden; cursor: pointer; background: #000; opacity: .6;
+    position: relative; flex: 0 0 auto; width: 132px; aspect-ratio: 16 / 9; padding: 0; border: 2px solid transparent;
+    border-radius: 4px; overflow: hidden; cursor: pointer; background: #000; opacity: .6;
     transition: opacity .2s ease, border-color .2s ease;
   }
   .thumbs button:hover { opacity: .9; }
-  .thumbs button.on { opacity: 1; border-color: var(--accent-2); }
+  .thumbs button.on { opacity: 1; border-color: var(--accent); }
   .thumbs img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumbs .play {
+    position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0, 0, 0, .25);
+  }
+  .thumbs .play svg { width: 30px; height: 30px; filter: drop-shadow(0 1px 4px rgba(0, 0, 0, .8)); }
   .progress { height: 3px; background: var(--line); border-radius: 2px; overflow: hidden; }
   .progress div { height: 100%; width: 0; background: var(--accent); }
 
   .side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-  .side .capsule { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 6px; display: block; }
-  .side p.desc { margin: 0; font-size: 14px; color: #d6d0c8; }
+  .side .capsule { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 4px; display: block; }
+  .side p.desc { margin: 0; font-size: 14px; color: #c9d3de; }
   .side dl { margin: 0; display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13px; }
   .side dt { color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-size: 12px; }
   .side dd { margin: 0; }
   .tags { display: flex; flex-wrap: wrap; gap: 6px; }
-  .tags span { font-size: 12px; padding: 3px 9px; border-radius: 4px; background: #3a2e2a; color: #e8c9bf; }
+  .tags span { font-size: 12px; padding: 3px 9px; border-radius: 3px; background: #1f3647; color: #8fd0f0; }
 
   /* Barra de descarga */
   .download-bar {
     margin-top: 18px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-    background: linear-gradient(90deg, #2a2320, #231e1c); border: 1px solid var(--line);
+    background: linear-gradient(90deg, #1d2a37, #17202a); border: 1px solid var(--line);
     border-radius: var(--radius); padding: 16px 18px;
   }
   .download-bar .what { flex: 1; min-width: 220px; }
@@ -110,60 +118,72 @@
   .download-bar .meta { color: var(--muted); font-size: 14px; margin: 2px 0 0; }
   .dl-btn {
     display: inline-flex; align-items: center; gap: 10px; text-decoration: none;
-    padding: 14px 26px; border-radius: 6px; font-weight: 800; font-size: 17px; color: #fff;
+    padding: 14px 26px; border-radius: 4px; font-weight: 800; font-size: 17px; color: #fff;
     background: linear-gradient(180deg, var(--download-2), var(--download));
     box-shadow: 0 6px 20px rgba(92, 158, 58, .35); transition: filter .15s ease, transform .15s ease;
   }
   .dl-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
   .dl-btn svg { width: 20px; height: 20px; }
-  .dl-btn.missing { background: #3a3532; box-shadow: none; color: var(--muted); pointer-events: none; }
+  .dl-btn.missing { background: #2a323c; box-shadow: none; color: var(--muted); pointer-events: none; }
   .dl-note { flex-basis: 100%; margin: 0; font-size: 13px; color: var(--muted); }
   .dl-note.warn { color: #f0c27a; }
 
   /* Contenido */
   main { padding: 26px 0 40px; }
-  .grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; }
-  section { margin-bottom: 30px; }
+  .grid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 28px; }
+  section { margin-bottom: 34px; }
   h2 {
     font-size: 15px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent-2);
-    margin: 0 0 12px; padding-bottom: 8px; border-bottom: 1px solid var(--line);
+    margin: 0 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--line);
   }
   h3 { margin: 18px 0 6px; font-size: 18px; }
   p { margin: 0 0 12px; }
   .lead { font-size: 18px; color: var(--paper); }
+
+  .features { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .feature { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px 16px; }
+  .feature strong { display: block; color: var(--paper); margin-bottom: 2px; }
+  .feature span { color: var(--muted); font-size: 14px; }
+  .feature.new { border-color: var(--neon); }
+  .feature.new strong::after {
+    content: "NUEVO"; margin-left: 8px; padding: 1px 6px; border-radius: 3px; font-size: 10px; letter-spacing: .1em;
+    background: var(--neon); color: #1a0710; vertical-align: 2px;
+  }
+
   ol.steps { counter-reset: step; list-style: none; padding: 0; margin: 0; }
-  ol.steps li { counter-increment: step; position: relative; padding: 0 0 12px 44px; }
+  ol.steps li { counter-increment: step; position: relative; padding: 4px 0 14px 44px; }
   ol.steps li::before {
     content: counter(step); position: absolute; left: 0; top: 0; width: 30px; height: 30px;
     border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 14px;
-    background: var(--accent); color: #1a1110;
+    background: var(--accent); color: #06141c;
   }
   ul.ticks { padding-left: 20px; margin: 0; }
   ul.ticks li { margin-bottom: 6px; }
-  table { width: 100%; border-collapse: collapse; font-size: 15px; }
-  td, th { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th { color: var(--muted); font-weight: 600; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; }
+  .controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 18px; font-size: 15px; }
+  .controls div { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .controls span { color: var(--muted); }
   kbd {
-    display: inline-block; min-width: 1.6em; padding: 1px 7px; border-radius: 5px; text-align: center;
-    background: #2e2826; border: 1px solid #4a423e; border-bottom-width: 3px;
+    display: inline-block; min-width: 1.6em; padding: 1px 7px; border-radius: 5px; text-align: center; white-space: nowrap;
+    background: #1f2833; border: 1px solid #3a4756; border-bottom-width: 3px;
     font: 600 13px/1.5 ui-monospace, Consolas, monospace; color: var(--paper);
   }
-  code { color: var(--paper); background: #000; padding: 1px 6px; border-radius: 4px; font-size: 14px; }
   .modes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
   .mode { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
   .mode img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; }
   .mode div { padding: 12px 14px 14px; }
-  .mode h3 { margin: 0 0 6px; font-size: 17px; }
+  .mode h3 { margin: 0 0 4px; font-size: 17px; }
   .mode p { color: var(--muted); font-size: 14px; margin: 0; }
 
   aside .box { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 18px; }
+  aside .box p, aside .box li { font-size: 14px; }
   .demo-box { border-color: var(--accent) !important; }
-  .demo-box p { font-size: 14px; color: var(--muted); }
+  .demo-box p { color: var(--muted); }
+  .demo-box p:last-child { margin: 0; }
   .demo-box strong { color: var(--paper); }
 
   dialog.lightbox { border: 0; padding: 0; background: transparent; max-width: min(1280px, 94vw); }
   dialog.lightbox::backdrop { background: rgba(0, 0, 0, .88); }
-  dialog.lightbox img { width: 100%; height: auto; display: block; border-radius: 8px; }
+  dialog.lightbox img { width: 100%; height: auto; display: block; border-radius: 6px; }
   dialog.lightbox p { color: var(--paper); text-align: center; margin: 10px 0 0; }
 
   footer { border-top: 1px solid var(--line); padding: 20px 0 30px; color: var(--muted); font-size: 13px; }
@@ -174,10 +194,10 @@
     .grid { grid-template-columns: minmax(0, 1fr); }
     .modes { grid-template-columns: 1fr; }
   }
-  @media (max-width: 520px) {
+  @media (max-width: 560px) {
     .thumbs button { width: 104px; }
     .dl-btn { width: 100%; justify-content: center; }
-    td, th { padding: 7px 6px; }
+    .features, .controls { grid-template-columns: minmax(0, 1fr); }
   }
 </style>
 </head>
@@ -186,17 +206,17 @@
   <header class="top">
     <h1 class="logo">Tattoo Studio <span>Simulator</span></h1>
     <span class="badge">DEMO</span>
-    <p class="tagline">Último día en la cárcel. Mañana sales libre… y con una máquina de segunda mano vas a abrir tu propio estudio.</p>
+    <p class="tagline">Último día en la cárcel. Mañana sales libre… y vas a abrir tu propio estudio.</p>
   </header>
 
-  <!-- Escaparate: capturas y ficha -->
+  <!-- Escaparate: vídeos, capturas y ficha -->
   <div class="showcase">
     <div>
       <div class="viewer" id="viewer">
-        <button class="nav prev" id="prev" type="button" aria-label="Captura anterior">
+        <button class="nav prev" id="prev" type="button" aria-label="Anterior">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
         </button>
-        <button class="nav next" id="next" type="button" aria-label="Captura siguiente">
+        <button class="nav next" id="next" type="button" aria-label="Siguiente">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>
         </button>
         <div class="caption" id="caption"></div>
@@ -209,16 +229,15 @@
 
     <div class="side">
       <img class="capsule" src="assets/carcel.jpg" alt="La celda del tutorial">
-      <p class="desc">Un simulador de estudio de tatuajes en el que tatúas a mano: sigues la línea del esténcil sobre la piel de un cliente que se mueve, se queja y paga según lo bien que lo hagas.</p>
+      <p class="desc">Tatúa a mano a tus clientes, dibuja tus propios diseños y convierte un local pequeño en el mejor estudio de la ciudad.</p>
       <dl>
-        <dt>Estado</dt><dd>Demo · prototipo 0.3</dd>
+        <dt>Precio</dt><dd>Gratis (demo)</dd>
         <dt>Género</dt><dd>Simulación, gestión</dd>
-        <dt>Sistema</dt><dd>Windows 10 / 11 (64 bits)</dd>
+        <dt>Sistema</dt><dd>Windows 10 / 11</dd>
         <dt>Idioma</dt><dd>Español</dd>
-        <dt>Motor</dt><dd>Godot 4.6</dd>
       </dl>
       <div class="tags">
-        <span>Simulación</span><span>Tatuajes</span><span>Gestión</span><span>Un jugador</span><span>Amigos (en red)</span><span>Relajante</span>
+        <span>Simulación</span><span>Tatuajes</span><span>Dibujo</span><span>Gestión</span><span>Con amigos</span><span>Relajante</span>
       </div>
     </div>
   </div>
@@ -227,13 +246,13 @@
   <div class="download-bar" id="download">
     <div class="what">
       <h2>Descargar la demo de Tattoo Studio Simulator</h2>
-      <p class="meta" id="dl-meta">Windows · archivo .rar</p>
+      <p class="meta" id="dl-meta">Gratis · Windows</p>
     </div>
     <a class="dl-btn" id="dl-btn" href="#" download>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>
       Descargar demo
     </a>
-    <p class="dl-note" id="dl-note">Descomprime el .rar (con WinRAR o 7-Zip) y abre el ejecutable. Es gratis y no necesita instalación.</p>
+    <p class="dl-note" id="dl-note">Descomprime el archivo y abre el juego. No hace falta instalar nada.</p>
   </div>
 
   <main>
@@ -241,47 +260,23 @@
       <div>
         <section>
           <h2>Sobre el juego</h2>
-          <p class="lead">Empiezas en la celda, haciéndole una estrella a tu compañero con una máquina casera. Al salir alquilas un local pequeño y te toca levantar tu propio estudio.</p>
-          <p>Atiendes citas, eliges diseños de tu cuaderno de bocetos, colocas el esténcil, tatúas, sacas la foto para la pared y cobras. Con cada trabajo bien hecho sube tu reputación y llegan clientes nuevos que pagan más.</p>
-          <ul class="ticks">
-            <li><strong>Tatuaje a mano de verdad:</strong> la tinta se queda en la piel 3D, la máquina vibra y, si al cliente le duele, se mueve y estropea la línea.</li>
-            <li><strong>Clientes con carácter:</strong> cada uno pide algo distinto, tiene su presupuesto y su aguante al dolor, y vuelve con los tatuajes que ya le hiciste.</li>
-            <li><strong>Gestión del estudio:</strong> citas, tinta que se gasta, máquinas mejores, diseños nuevos y una pared con las fotos de tus trabajos.</li>
-            <li><strong>Modo libre:</strong> un maniquí para practicar en 15 zonas del cuerpo.</li>
-            <li><strong>Amigos:</strong> presta tu avatar para que un amigo te tatúe en directo, o tatúa el suyo.</li>
-          </ul>
+          <p class="lead">Empiezas en la celda tatuando una estrella con una máquina casera. Al salir, montas tu propio estudio.</p>
+          <div class="features">
+            <div class="feature"><strong>Tatúa a mano</strong><span>La tinta se queda en la piel. Si duele, el cliente se mueve.</span></div>
+            <div class="feature new"><strong>Dibuja tus diseños</strong><span>Dibuja en el cuaderno o calca una imagen y tatúala.</span></div>
+            <div class="feature"><strong>Clientes con carácter</strong><span>Cada uno pide algo distinto y paga según cómo quede.</span></div>
+            <div class="feature"><strong>Lleva tu estudio</strong><span>Citas, tinta, máquinas mejores y tu pared de fotos.</span></div>
+          </div>
         </section>
 
         <section>
           <h2>Cómo se juega</h2>
           <ol class="steps">
-            <li><strong>Tutorial en la cárcel.</strong> Tu compañero de celda te pide una estrella en el antebrazo. Te enseña todo el proceso.</li>
-            <li><strong>Abre el día.</strong> En el <em>portátil</em> del mostrador ves las solicitudes de cita: dales cita o recházalas. Los clientes con cita entran y se sientan en el sofá.</li>
-            <li><strong>Habla con el cliente.</strong> Escucha lo que pide y acepta el trabajo (o piénsalo y mira antes tu cuaderno).</li>
-            <li><strong>Elige el diseño</strong> en tu cuaderno de bocetos y <strong>coloca el esténcil</strong>: zona del cuerpo, tamaño y rotación.</li>
-            <li><strong>Tatúa siguiendo la línea.</strong> Vigila la barra de dolor: suelta de vez en cuando para que el cliente descanse. Repasar mucho o usar una aguja gruesa duele más.</li>
-            <li><strong>Saca la foto</strong> del tatuaje (es obligatoria), <strong>cobra</strong> y atiende a la siguiente cita. Cuando no quede nadie, cierra el estudio con la puerta de la calle.</li>
+            <li><strong>Da cita</strong> a los clientes desde el portátil.</li>
+            <li><strong>Escucha</strong> lo que piden y <strong>elige el diseño</strong> en tu cuaderno (o dibuja uno nuevo).</li>
+            <li><strong>Tatúa</strong> siguiendo la línea. Suelta de vez en cuando para que descansen.</li>
+            <li><strong>Saca la foto</strong>, cobra y a por el siguiente.</li>
           </ol>
-        </section>
-
-        <section>
-          <h2>Controles</h2>
-          <table>
-            <thead><tr><th>Acción</th><th>Control</th></tr></thead>
-            <tbody>
-              <tr><td>Tatuar (enciende la máquina)</td><td>Mantener <kbd>Clic izq.</kbd></td></tr>
-              <tr><td>Girar la cámara</td><td>Mantener <kbd>Clic der.</kbd> o <kbd>Espacio</kbd> y mover el ratón</td></tr>
-              <tr><td>Acercar / alejar</td><td><kbd>Rueda</kbd></td></tr>
-              <tr><td>Mover la vista</td><td>Mantener el <kbd>botón de la rueda</kbd> y mover el ratón</td></tr>
-              <tr><td>Tamaño de aguja</td><td><kbd>[</kbd> <kbd>]</kbd> o <kbd>+</kbd> <kbd>−</kbd> (o el control del panel)</td></tr>
-              <tr><td>Mover el esténcil</td><td><kbd>Clic</kbd> / arrastrar sobre la piel</td></tr>
-              <tr><td>Rotar el esténcil</td><td><kbd>Q</kbd> <kbd>E</kbd></td></tr>
-              <tr><td>Usar algo de la recepción</td><td><kbd>Clic</kbd> sobre el objeto (se ilumina al pasar por encima)</td></tr>
-              <tr><td>Pasar página del cuaderno</td><td><kbd>←</kbd> <kbd>→</kbd></td></tr>
-              <tr><td>Plegar un panel</td><td>Botón <kbd>− Ocultar</kbd> de su cabecera</td></tr>
-            </tbody>
-          </table>
-          <p style="margin-top:12px;color:var(--muted);font-size:14px">Se puede jugar con tableta gráfica (sin presión). Si el lápiz hace clic pero no mueve la máquina, cambia el driver con el botón <strong>Tableta gráfica</strong> del menú principal. Si algo no aparece en el estudio, pulsa <strong>Desatascar</strong> en la barra superior.</p>
         </section>
 
         <section>
@@ -291,78 +286,79 @@
               <img src="assets/tatuando.jpg" alt="Tatuando una estrella en la espalda de un cliente" loading="lazy">
               <div>
                 <h3>Estudio</h3>
-                <p>La partida: tutorial, días, citas, clientes, reputación, tinta, máquinas y diseños.</p>
+                <p>La partida completa, desde la cárcel hasta tu estudio.</p>
               </div>
             </article>
             <article class="mode">
               <img src="assets/modo-libre.jpg" alt="Maniquí con tatuajes en el modo libre" loading="lazy">
               <div>
                 <h3>Modo libre</h3>
-                <p>Un maniquí para practicar en cualquier zona, sin dolor ni dinero. Lo que tatúas se guarda.</p>
+                <p>Practica en un maniquí, sin prisas ni clientes.</p>
               </div>
             </article>
             <article class="mode">
               <img src="assets/amigos.jpg" alt="Un amigo tatuando el avatar en directo" loading="lazy">
               <div>
                 <h3>Amigos</h3>
-                <p>Presta tu avatar con un código y tu amigo te tatúa en directo; lo que te hace se queda en tu avatar.</p>
+                <p>Pasa un código y que tu amigo te tatúe en directo.</p>
               </div>
             </article>
           </div>
         </section>
 
         <section>
-          <h2>Instalación</h2>
-          <ol class="steps">
-            <li>Pulsa <strong>Descargar demo</strong> y guarda el archivo <code>.rar</code>.</li>
-            <li>Descomprímelo con <strong>WinRAR</strong> o <strong>7-Zip</strong> (clic derecho → <em>Extraer aquí</em>). No lo abras desde dentro del .rar.</li>
-            <li>Abre el ejecutable (<code>.exe</code>) de la carpeta. Si Windows muestra «Windows protegió su PC», pulsa <em>Más información</em> → <em>Ejecutar de todas formas</em>: aparece porque la demo no está firmada.</li>
-          </ol>
-          <p style="color:var(--muted);font-size:14px">La partida se guarda sola en <code>%APPDATA%\Godot\app_userdata\Tattoo Studio Simulator</code>. Para desinstalar, borra la carpeta del juego (y esa carpeta si quieres borrar también el progreso).</p>
+          <h2>Controles</h2>
+          <div class="controls">
+            <div><span>Tatuar</span><kbd>Clic izq.</kbd></div>
+            <div><span>Girar la cámara</span><kbd>Clic der.</kbd></div>
+            <div><span>Acercar / alejar</span><kbd>Rueda</kbd></div>
+            <div><span>Tamaño de aguja</span><span><kbd>[</kbd> <kbd>]</kbd></span></div>
+            <div><span>Rotar el esténcil</span><span><kbd>Q</kbd> <kbd>E</kbd></span></div>
+            <div><span>Usar un objeto</span><kbd>Clic</kbd></div>
+          </div>
+          <p style="margin-top:12px;color:var(--muted);font-size:14px">También con tableta gráfica: cuanto más aprietas, más gruesa sale la línea.</p>
         </section>
       </div>
 
       <aside>
         <div class="box demo-box">
           <h2>Esto es una demo</h2>
-          <p>Una versión temprana para probar el juego. <strong>Faltan cosas, hay modelos provisionales</strong> y puede haber fallos.</p>
-          <p>Si encuentras algo raro, cuéntalo: ayuda mucho saber qué estabas haciendo.</p>
+          <p>Una versión temprana: <strong>faltan cosas</strong> y puede haber fallos.</p>
+          <p>Si algo se atasca, pulsa <strong>Desatascar</strong> arriba. Y si ves algo raro, ¡cuéntanoslo!</p>
+        </div>
+
+        <div class="box">
+          <h2>Instalación</h2>
+          <ol class="steps">
+            <li>Descarga el archivo.</li>
+            <li>Clic derecho → <em>Extraer aquí</em> (con WinRAR o 7-Zip).</li>
+            <li>Abre el juego de la carpeta.</li>
+          </ol>
+          <p style="color:var(--muted);margin:0">Si Windows avisa, pulsa <em>Más información</em> → <em>Ejecutar de todas formas</em>.</p>
         </div>
 
         <div class="box">
           <h2>Requisitos</h2>
-          <ul class="ticks" style="font-size:14px">
-            <li><strong>Sistema:</strong> Windows 10 u 11 de 64 bits.</li>
-            <li><strong>Gráficos:</strong> tarjeta compatible con Vulkan 1.0 (casi cualquiera desde 2016) y drivers actualizados.</li>
-            <li><strong>Memoria:</strong> 4 GB de RAM (8 GB recomendado).</li>
-            <li><strong>Control:</strong> ratón con rueda; también tableta gráfica.</li>
-          </ul>
-        </div>
-
-        <div class="box">
-          <h2>Jugar con amigos</h2>
-          <ul class="ticks" style="font-size:14px">
-            <li>En <strong>Amigos → Prestar mi avatar</strong> te sale un código; tu amigo lo escribe en <strong>Tatuar a un amigo</strong>.</li>
-            <li>En la misma red (casa, wifi) funciona sin más.</li>
-            <li>Por internet, el juego intenta abrir el puerto solo. Si no aparece un código «Por internet», usad una VPN para juegos (Tailscale, Radmin VPN o ZeroTier) o abrid el puerto <code>47820</code> UDP en el router.</li>
-            <li>Si Windows pregunta por el firewall, permite el acceso.</li>
+          <ul class="ticks">
+            <li>Windows 10 u 11.</li>
+            <li>Tarjeta gráfica de los últimos años.</li>
+            <li>Ratón con rueda o tableta gráfica.</li>
           </ul>
         </div>
 
         <div class="box">
           <h2>Consejos</h2>
-          <ul class="ticks" style="font-size:14px">
-            <li>Lee bien lo que pide el cliente: el diseño cuenta tanto como lo bien que lo tatúes.</li>
-            <li>No dejes la aguja quieta en el mismo sitio: duele mucho y el cliente se mueve.</li>
-            <li>La tinta se acaba: mira la estantería antes de aceptar trabajos.</li>
-            <li>Una máquina mejor vibra menos y duele menos: la tienes en la vitrina.</li>
+          <ul class="ticks">
+            <li>Lee bien lo que pide el cliente.</li>
+            <li>No dejes la aguja quieta: duele mucho.</li>
+            <li>Vigila la tinta antes de aceptar trabajos.</li>
           </ul>
         </div>
       </aside>
     </div>
   </main>
 
-  <footer>Tattoo Studio Simulator — demo gratuita. Hecho con Godot Engine.</footer>
+  <footer>Tattoo Studio Simulator — demo gratuita.</footer>
 </div>
 
 <dialog class="lightbox" id="lightbox">
@@ -375,53 +371,86 @@
   // Archivo de la demo dentro de la carpeta game/. Cambia el nombre aquí si subes otro.
   const DOWNLOAD_FILE = "game/TattooStudioSimulator-Demo.rar";
 
+  // Como en las tiendas: primero los vídeos y después las capturas.
+  // [archivo, texto, portada del vídeo]
   const SHOTS = [
-    ["recepcion.jpg", "La recepción de tu estudio: el cliente con cita espera en el sofá"],
-    ["carcel.jpg", "Tutorial: tu último día en la cárcel"],
-    ["tatuando.jpg", "Tatuando a mano: la máquina vibra y la tinta se queda en la piel"],
-    ["portatil.jpg", "El portátil: solicitudes de cita del día y diseños nuevos"],
-    ["cuaderno.jpg", "Tu cuaderno de bocetos con los diseños que tienes"],
-    ["resultado.jpg", "El resultado: adecuación, ejecución, dolor y pago"],
+    ["video1.mp4", "Tatuando con tableta gráfica", "video1.jpg"],
+    ["video2.mp4", "Del tatuaje a la pared de fotos", "video2.jpg"],
+    ["recepcion.jpg", "La recepción de tu estudio"],
+    ["dibujar.jpg", "Nuevo: dibuja tus propios diseños y calca imágenes"],
+    ["diseno-propio.jpg", "Tus diseños, en el cuaderno junto a los demás"],
+    ["carcel.jpg", "Todo empieza en la cárcel"],
+    ["tatuando.jpg", "Tatuando a mano"],
+    ["portatil.jpg", "Las citas del día en el portátil"],
+    ["cuaderno.jpg", "Tu cuaderno de bocetos"],
+    ["resultado.jpg", "Cobras según lo bien que te quede"],
     ["fotos.jpg", "La pared con las fotos de tus trabajos"],
-    ["modo-libre.jpg", "Modo libre: un maniquí para practicar en cualquier zona"],
-    ["amigos.jpg", "Amigos: tu amigo te tatúa y lo ves en directo"],
+    ["modo-libre.jpg", "Modo libre: practica en un maniquí"],
+    ["amigos.jpg", "Con amigos: te tatúan en directo"],
   ];
   const AUTOPLAY_MS = 5000;
+  const isVideo = (file) => file.endsWith(".mp4");
 
   const viewer = document.getElementById("viewer");
   const caption = document.getElementById("caption");
   const thumbs = document.getElementById("thumbs");
   const progress = document.getElementById("progress");
-  const images = [];
+  const items = [];
   const buttons = [];
   let current = 0;
   let autoplay = true;
-  let timer = null;
   let started = 0;
 
-  SHOTS.forEach(([file, text], i) => {
-    const img = document.createElement("img");
-    img.src = "assets/" + file;
-    img.alt = text;
-    img.decoding = "async";
-    img.addEventListener("click", () => openLightbox(i));
-    viewer.insertBefore(img, caption);
-    images.push(img);
+  SHOTS.forEach(([file, text, poster], i) => {
+    let el;
+    if (isVideo(file)) {
+      el = document.createElement("video");
+      el.src = "assets/" + file;
+      el.poster = "assets/" + poster;
+      el.muted = true;
+      el.playsInline = true;
+      el.controls = true;
+      el.preload = i === 0 ? "auto" : "metadata";
+      // Al acabar un vídeo, pasa a lo siguiente si nadie ha tocado nada.
+      el.addEventListener("ended", () => { if (autoplay) show(current + 1); });
+      el.addEventListener("play", () => viewer.classList.add("playing"));
+      el.addEventListener("pause", () => viewer.classList.remove("playing"));
+      // Tocar el vídeo (controles, sonido…) para la galería.
+      el.addEventListener("pointerdown", stopAutoplay);
+      el.addEventListener("volumechange", () => { if (!el.muted) stopAutoplay(); });
+    } else {
+      el = document.createElement("img");
+      el.src = "assets/" + file;
+      el.alt = text;
+      el.decoding = "async";
+      el.addEventListener("click", () => openLightbox(i));
+    }
+    viewer.insertBefore(el, caption);
+    items.push(el);
 
     const b = document.createElement("button");
     b.type = "button";
     b.setAttribute("aria-label", text);
-    b.innerHTML = '<img src="assets/' + file + '" alt="" loading="lazy">';
+    b.innerHTML = '<img src="assets/' + (poster || file) + '" alt="" loading="lazy">' +
+      (isVideo(file) ? '<span class="play"><svg viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg></span>' : "");
     b.addEventListener("click", () => { stopAutoplay(); show(i); });
     thumbs.appendChild(b);
     buttons.push(b);
   });
 
   function show(i) {
+    const prev = items[current];
+    if (prev && prev.tagName === "VIDEO") prev.pause();
     current = (i + SHOTS.length) % SHOTS.length;
-    images.forEach((img, k) => img.classList.toggle("on", k === current));
+    items.forEach((el, k) => el.classList.toggle("on", k === current));
     buttons.forEach((b, k) => b.classList.toggle("on", k === current));
     caption.textContent = SHOTS[current][1];
+    const el = items[current];
+    viewer.classList.remove("playing");
+    if (el.tagName === "VIDEO") {
+      el.currentTime = 0;
+      el.play().catch(() => {});
+    }
     const b = buttons[current];
     thumbs.scrollTo({ left: b.offsetLeft - thumbs.clientWidth / 2 + b.clientWidth / 2 });
     started = performance.now();
@@ -433,42 +462,48 @@
   }
 
   // Pasa sola cada pocos segundos hasta que el usuario toca algo (como en las tiendas).
+  // Los vídeos se ven enteros: la barra sigue su avance.
   function tick(now) {
     if (autoplay) {
-      const k = (now - started) / AUTOPLAY_MS;
-      if (k >= 1) {
-        show(current + 1);
+      const el = items[current];
+      if (el.tagName === "VIDEO") {
+        progress.style.width = (el.duration ? el.currentTime / el.duration * 100 : 0) + "%";
       } else {
-        progress.style.width = (k * 100) + "%";
+        const k = (now - started) / AUTOPLAY_MS;
+        if (k >= 1) show(current + 1);
+        else progress.style.width = (k * 100) + "%";
       }
     }
-    timer = requestAnimationFrame(tick);
+    requestAnimationFrame(tick);
   }
 
   document.getElementById("prev").addEventListener("click", () => { stopAutoplay(); show(current - 1); });
   document.getElementById("next").addEventListener("click", () => { stopAutoplay(); show(current + 1); });
-  viewer.addEventListener("mouseenter", () => { if (autoplay) started = performance.now(); });
-  document.addEventListener("keydown", (e) => {
-    if (lightbox.open) {
-      if (e.key === "ArrowRight") openLightbox(current + 1);
-      if (e.key === "ArrowLeft") openLightbox(current - 1);
-      return;
-    }
-  });
+  viewer.addEventListener("mouseenter", () => { if (autoplay && items[current].tagName !== "VIDEO") started = performance.now(); });
 
-  // Ampliar
+  // Ampliar (solo las capturas)
   const lightbox = document.getElementById("lightbox");
   const lbImg = document.getElementById("lightbox-img");
   const lbCaption = document.getElementById("lightbox-caption");
+  const pictures = SHOTS.map((s, i) => i).filter((i) => !isVideo(SHOTS[i][0]));
   function openLightbox(i) {
     stopAutoplay();
     show(i);
-    lbImg.src = images[current].src;
+    lbImg.src = items[current].src;
     lbImg.alt = SHOTS[current][1];
-    lbCaption.textContent = SHOTS[current][1] + "  ·  " + (current + 1) + " / " + SHOTS.length;
+    lbCaption.textContent = SHOTS[current][1] + "  ·  " + (pictures.indexOf(current) + 1) + " / " + pictures.length;
     if (!lightbox.open) lightbox.showModal();
   }
+  function stepLightbox(d) {
+    const k = pictures.indexOf(current);
+    openLightbox(pictures[(k + d + pictures.length) % pictures.length]);
+  }
   lightbox.addEventListener("click", () => lightbox.close());
+  document.addEventListener("keydown", (e) => {
+    if (!lightbox.open) return;
+    if (e.key === "ArrowRight") stepLightbox(1);
+    if (e.key === "ArrowLeft") stepLightbox(-1);
+  });
   document.querySelectorAll(".mode img").forEach((img) => {
     img.style.cursor = "zoom-in";
     img.addEventListener("click", () => {
@@ -478,7 +513,7 @@
   });
 
   show(0);
-  timer = requestAnimationFrame(tick);
+  requestAnimationFrame(tick);
 
   // Descarga: comprueba que el archivo está y muestra su tamaño (solo desde un servidor).
   const btn = document.getElementById("dl-btn");
@@ -491,13 +526,13 @@
       if (!r.ok) throw new Error(r.status);
       const bytes = Number(r.headers.get("Content-Length") || 0);
       if (bytes > 0) {
-        meta.textContent = "Windows · archivo .rar · " + (bytes / 1048576).toFixed(bytes > 104857600 ? 0 : 1) + " MB";
+        meta.textContent = "Gratis · Windows · " + Math.round(bytes / 1048576) + " MB";
       }
     }).catch(() => {
       btn.classList.add("missing");
       btn.lastChild.textContent = " Próximamente";
       note.classList.add("warn");
-      note.textContent = "La descarga aún no está disponible. (Falta el archivo " + DOWNLOAD_FILE + ").";
+      note.textContent = "La descarga estará disponible muy pronto.";
     });
   }
 })();

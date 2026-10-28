@@ -1,0 +1,5 @@
+Copia aquí el .rar de la demo con el nombre:
+
+    TattooStudioSimulator-Demo.rar
+
+(o cambia el nombre en index.html, constante DOWNLOAD_FILE). Ver ../LEEME.md
